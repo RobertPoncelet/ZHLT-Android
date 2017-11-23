@@ -2,9 +2,13 @@
 
 #include "csg.h"
 
+#undef min(a,b)
+#undef max(a,b)
+
 #ifdef HLCSG_NULLIFY_INVISIBLE
 #include <fstream>
 #include <istream>
+
 using namespace std;
 
 set<string> g_invisible_items;

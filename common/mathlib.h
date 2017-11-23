@@ -14,6 +14,7 @@
 #ifdef STDC_HEADERS
 #include <math.h>
 #include <float.h>
+#include <limits.h>
 #endif
 
 #include <algorithm>

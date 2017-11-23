@@ -150,4 +150,6 @@ extern int      LittleLong(int l);
 extern float    BigFloat(float l);
 extern float    LittleFloat(float l);
 
+#include "mathlib.h"
+
 #endif //CMDLIB_H__
