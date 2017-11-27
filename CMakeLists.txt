@@ -5,6 +5,8 @@ set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_CXX_FLAGS "-g -lm -lpthread -fpermissive")
 
+SET(EXES FALSE CACHE BOOL "Create executables instead of shared libraries")
+
 include_directories(common)
 include_directories(template)
 
@@ -54,6 +56,14 @@ foreach (proj ${PROJECTS})
 	include_directories(${proj})
 	file(GLOB PROJECT_SOURCES "${proj}/*.cpp")
 	
+	if (EXES)
+		list(REMOVE_ITEM PROJECT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${proj}/${proj}_lib.cpp")
+		MESSAGE(STATUS "Excluding library source ${proj}_lib.cpp")
+	else (EXES)
+		list(REMOVE_ITEM PROJECT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${proj}/${proj}.cpp")
+		MESSAGE(STATUS "Excluding executable source ${proj}.cpp")
+	endif (EXES)
+	
 	# Only hlrad doesn't use DOUBLEVEC_T
 	#if (${proj} STREQUAL "hlrad")
 		#remove_definitions(-DDOUBLEVEC_T)
@@ -67,11 +77,16 @@ foreach (proj ${PROJECTS})
 	
 	set(SOURCES ${PROJECT_SOURCES} ${COMMON_SOURCES})
 	
-	add_executable(${proj} ${SOURCES})
+	if (EXES)
+		add_executable(${proj} ${SOURCES})
+	else (EXES)
+		add_library(${proj} SHARED ${SOURCES})
+	endif(EXES)
+	
 endforeach (proj ${PROJECTS})
 
 separate_arguments(FINAL_COMMON_DEFINITIONS UNIX_COMMAND "${COMMON_DEFINITIONS}")
-set_target_properties(hlbsp PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T )
-set_target_properties(hlcsg PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T )
-set_target_properties(hlrad PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS} )
-set_target_properties(hlvis PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T )
+set_target_properties(hlbsp PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
+set_target_properties(hlcsg PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
+set_target_properties(hlrad PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS})
+set_target_properties(hlvis PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
