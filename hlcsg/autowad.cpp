@@ -1,5 +1,5 @@
 // AJM: Added this file in
-#include "csg.h"
+#include "hlcsg.h"
 #include "cmdlib.h"
 
 #ifdef HLCSG_AUTOWAD

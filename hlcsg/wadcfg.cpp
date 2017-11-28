@@ -1,6 +1,6 @@
 // AJM: ADDED THIS ENTIRE FILE IN
 
-#include "csg.h"
+#include "hlcsg.h"
 #ifdef HLCSG_WADCFG
 
 //#ifdef SYSTEM_WIN32

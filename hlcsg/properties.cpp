@@ -1,9 +1,9 @@
 //KGP -- added in for use with HLCSG_NULLIFY_INVISIBLE
 
-#include "csg.h"
+#include "hlcsg.h"
 
-#undef min(a,b)
-#undef max(a,b)
+#undef min
+#undef max
 
 #ifdef HLCSG_NULLIFY_INVISIBLE
 #include <fstream>

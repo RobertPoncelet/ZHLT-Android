@@ -1,4 +1,4 @@
-#include "csg.h"
+#include "hlcsg.h"
 
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128

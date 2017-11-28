@@ -78,13 +78,43 @@
 
 typedef struct
 {
+    std::string     mapName;
+    int             numThreads;
+    bool            estimate;
+    int             developerLevel;
+    bool            verbose;
+    bool            info;
+    bool            chart;
+    int             threadPriority;
+    bool            log;
+    bool            skyClip;
+    bool            noClip;
+    bool            onlyEnts;
+    bool            useNullTex;
+    bool            clipNazi;
+    int             clipType;
+    std::string     wadConfigName;
+    std::string     wadCfgFile;
+    std::string     nullFile;
+    bool            wadAutoDetect;
+    bool            wadTextures;
+    std::deque< std::string >   wadInclude;
+    int             texData;
+    int             lightData;
+    float           brushUnionThreshold;
+    float           tinyThreshold;
+    std::string     hullfile;
+} hlcsg_args_t;
+
+int hlcsg_main(hlcsg_args_t);
+
+typedef struct
+{
     vec3_t          normal;
     vec3_t          origin;
     vec_t           dist;
     planetypes      type;
 } plane_t;
-
-
 
 typedef struct
 {

@@ -10,7 +10,7 @@
     
 */
 
-#include "csg.h" 
+#include "hlcsg.h" 
 
 /*
 
@@ -1344,7 +1344,7 @@ void            CSGCleanup()
 //  Main
 //      Oh, come on.
 // =====================================================================================
-int             main(const int argc, char** argv)
+int             exe_main(const int argc, char** argv)
 {
     int             i;                          
     char            name[_MAX_PATH];            // mapanme 
@@ -1834,6 +1834,321 @@ int             main(const int argc, char** argv)
         Log(
         "%3i (%4.0f, %4.0f, %4.0f) (%4.0f, %4.0f, %4.0f) (%5.0f) %i\n",
         i,     
+        p->normal[1], p->normal[2], p->normal[3],
+        p->origin[1], p->origin[2], p->origin[3],
+        p->dist,
+        p->type
+        );
+    }
+    Log("---------------------------------------\n\n");
+#endif
+
+    // elapsed time
+    end = I_FloatTime();
+    LogTimeElapsed(end - start);
+
+    return 0;
+}
+
+// =====================================================================================
+//  Main
+//      Oh, come on.
+// =====================================================================================
+int             hlcsg_main(hlcsg_args_t args) {
+    int i;
+    char name[_MAX_PATH];            // mapanme
+    double start, end;                 // start/end time log
+    const char *mapname_from_arg = NULL;    // mapname path from passed argvar
+
+    g_Program = "hlcsg";
+
+    // Hard coded list of -wadinclude files, used for HINT texture brushes so lazy
+    // mapmakers wont cause beta testers (or possibly end users) to get a wad
+    // error on zhlt.wad etc
+    g_WadInclude.push_back("zhlt.wad");
+
+    memset(wadconfigname, 0, sizeof(wadconfigname));//AJM
+
+
+
+    // detect argv
+
+    g_numthreads = args.numThreads;
+    if (g_numthreads < 1) {
+        Log("Expected value of at least 1 for '-threads'\n");
+        Usage();
+    }
+
+#ifdef SYSTEM_WIN32
+    else if (!strcasecmp(argv[i], "-estimate"))
+{
+    g_estimate = true;
+}
+#endif
+
+#ifdef SYSTEM_POSIX
+    g_estimate = args.estimate;
+#endif
+
+    g_developer = (developer_level_t) args.developerLevel;
+    g_verbose = args.verbose;
+    g_info = args.info;
+    g_chart = args.chart;
+    g_threadpriority = args.threadPriority <= -1 ? eThreadPriorityLow :
+                       args.threadPriority >= 1 ? eThreadPriorityHigh :
+                       eThreadPriorityNormal;
+    g_log = args.log;
+    g_skyclip = args.skyClip;
+    g_noclip = args.noClip;
+    g_onlyents = args.onlyEnts;
+
+#ifdef ZHLT_NULLTEX  // AJM: added in -nonulltex
+    g_bUseNullTex = args.useNullTex;
+#endif
+
+#ifdef HLCSG_CLIPECONOMY    // AJM: added in -noclipeconomy
+    g_bClipNazi = args.clipNazi;
+#endif
+
+#ifdef HLCSG_PRECISIONCLIP    // KGP: added in -cliptype
+    g_cliptype = (cliptype)args.clipType;
+#endif
+
+#ifdef HLCSG_WADCFG
+    // AJM: added in -wadconfig
+    safe_strncpy(wadconfigname, args.wadConfigName.c_str(), MAX_WAD_CFG_NAME);
+    if (args.wadConfigName.length() > MAX_WAD_CFG_NAME) {
+        Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
+        wadconfigname[MAX_WAD_CFG_NAME] = 0;
+    }
+    //JK: added in -wadcfgfile
+    //g_wadcfgfile = args.wadCfgFile.c_str(); // TODO: fix later i guess?
+#endif
+#ifdef HLCSG_NULLIFY_INVISIBLE
+    g_nullfile = args.nullFile.c_str();
+#endif
+
+#ifdef HLCSG_AUTOWAD // AJM
+    g_bWadAutoDetect = args.wadAutoDetect;
+#endif
+
+#ifdef ZHLT_DETAIL // AJM
+    else if (!strcasecmp(argv[i], "-nodetail"))
+{
+    g_bDetailBrushes = false;
+}
+#endif
+
+#ifdef ZHLT_PROGRESSFILE // AJM
+    else if (!strcasecmp(argv[i], "-progressfile"))
+{
+    if (i < argc)
+    {
+        g_progressfile = argv[++i];
+    }
+    else
+    {
+        Log("Error: -progressfile: expected path to progress file following parameter\n");
+        Usage();
+    }
+}
+#endif
+    g_wadtextures = args.wadTextures;
+
+    for (auto wad : args.wadInclude)
+    {
+        g_WadInclude.push_back(wad);
+    }
+
+    int x = args.texData * 1024;
+    if (x > g_max_map_miptex)
+    {
+        g_max_map_miptex = x;
+    }
+
+    x = args.lightData * 1024;
+    if (x > g_max_map_lightdata)
+    {
+        g_max_map_lightdata = x;
+    }
+
+    g_BrushUnionThreshold = args.brushUnionThreshold;
+    g_tiny_threshold = args.tinyThreshold;
+    g_hullfile = args.hullfile.c_str();
+    mapname_from_arg = args.mapName.c_str();
+
+    // no mapfile?
+    if (!mapname_from_arg)
+    {
+        // what a shame.
+        Log("No mapfile specified\n");
+        Usage();
+    }
+
+    // handle mapname
+    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
+    FlipSlashes(g_Mapname);
+    StripExtension(g_Mapname);
+
+    // onlyents
+    if (!g_onlyents)
+        ResetTmpFiles();
+
+    // other stuff
+    ResetErrorLog();
+    ResetLog();
+    OpenLog(g_clientid);
+    atexit(CloseLog);
+    //LogStart(argc, argv); // TODO: logs
+    atexit(CSGCleanup); // AJM
+    dtexdata_init();
+    atexit(dtexdata_free);
+
+    // START CSG
+    // AJM: re-arranged some stuff up here so that the mapfile is loaded
+    //  before settings are finalised and printed out, so that the info_compile_parameters
+    //  entity can be dealt with effectively
+    start = I_FloatTime();
+
+    LoadHullfile(g_hullfile);               // if the user specified a hull file, load it now
+#ifdef HLCSG_NULLIFY_INVISIBLE
+    if(g_bUseNullTex)
+    { properties_initialize(g_nullfile); }
+#endif
+    safe_strncpy(name, mapname_from_arg, _MAX_PATH); // make a copy of the nap name
+    DefaultExtension(name, ".map");                  // might be .reg
+
+    LoadMapFile(name);
+    ThreadSetDefault();
+    ThreadSetPriority(g_threadpriority);
+    Settings();
+
+
+#ifdef HLCSG_WADCFG // AJM
+    // figure out what to do with the texture settings
+    if (wadconfigname[0])           // custom wad configuations will take precedence
+    {
+        LoadWadConfigFile();
+        ProcessWadConfiguration();
+    }
+    else
+    {
+        Log("Using mapfile wad configuration\n");
+    }
+    if (!g_bWadConfigsLoaded)  // dont try and override wad.cfg
+#endif
+    {
+        GetUsedWads();
+    }
+
+#ifdef HLCSG_AUTOWAD
+    if (g_bWadAutoDetect)
+    {
+        Log("Wadfiles not in use by the map will be excluded\n");
+    }
+#endif
+
+    DumpWadinclude();
+    Log("\n");
+
+    // if onlyents, just grab the entites and resave
+    if (g_onlyents)
+    {
+        char            out[_MAX_PATH];
+
+        safe_snprintf(out, _MAX_PATH, "%s.bsp", g_Mapname);
+        LoadBSPFile(out);
+        LoadWadincludeFile(g_Mapname);
+
+        HandleWadinclude();
+
+        // Write it all back out again.
+        if (g_chart)
+        {
+            PrintBSPFileSizes();
+        }
+        WriteBSP(g_Mapname);
+
+        end = I_FloatTime();
+        LogTimeElapsed(end - start);
+        return 0;
+    }
+    else
+    {
+        SaveWadincludeFile(g_Mapname);
+    }
+
+#ifdef HLCSG_CLIPECONOMY // AJM
+    CheckForNoClip();
+#endif
+
+    // createbrush
+    NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CreateBrush);
+    CheckFatal();
+
+#ifdef HLCSG_PRECISIONCLIP // KGP - drop TEX_BEVEL flag
+    FixBevelTextures();
+#endif
+
+    // boundworld
+    BoundWorld();
+
+    Verbose("%5i map planes\n", g_nummapplanes);
+
+    // Set model centers
+    NamedRunThreadsOnIndividual(g_numentities, g_estimate, SetModelCenters);
+
+    // Calc brush unions
+    if ((g_BrushUnionThreshold > 0.0) && (g_BrushUnionThreshold <= 100.0))
+    {
+        NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CalculateBrushUnions);
+    }
+
+    // open hull files
+    for (i = 0; i < NUM_HULLS; i++)
+    {
+        char            name[_MAX_PATH];
+
+        safe_snprintf(name, _MAX_PATH, "%s.p%i", g_Mapname, i);
+
+        out[i] = fopen(name, "w");
+
+        if (!out[i])
+            Error("Couldn't open %s", name);
+    }
+
+    ProcessModels();
+
+    Verbose("%5i csg faces\n", c_csgfaces);
+    Verbose("%5i used faces\n", c_outfaces);
+    Verbose("%5i tiny faces\n", c_tiny);
+    Verbose("%5i tiny clips\n", c_tiny_clip);
+
+    // close hull files
+    for (i = 0; i < NUM_HULLS; i++)
+        fclose(out[i]);
+
+    EmitPlanes();
+
+    if (g_chart)
+        PrintBSPFileSizes();
+
+    WriteBSP(g_Mapname);
+
+    // AJM: debug
+#if 0
+    Log("\n---------------------------------------\n"
+        "Map Plane Usage:\n"
+        "  #  normal             origin             dist   type\n"
+        "    (   x,    y,    z) (   x,    y,    z) (     )\n"
+        );
+    for (i = 0; i < g_nummapplanes; i++)
+    {
+        plane_t* p = &g_mapplanes[i];
+
+        Log(
+        "%3i (%4.0f, %4.0f, %4.0f) (%4.0f, %4.0f, %4.0f) (%5.0f) %i\n",
+        i,
         p->normal[1], p->normal[2], p->normal[3],
         p->origin[1], p->origin[2], p->origin[3],
         p->dist,

@@ -1,4 +1,4 @@
-#include "csg.h"
+#include "hlcsg.h"
 
 plane_t         g_mapplanes[MAX_INTERNAL_MAP_PLANES];
 int             g_nummapplanes;
