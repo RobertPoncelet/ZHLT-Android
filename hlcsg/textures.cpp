@@ -73,7 +73,7 @@ static FILE*    texfiles[MAX_TEXFILES];
     }
 
 #else // SIZEOF_CHARP != 8, almost certainly 4
-    #define texmap64_store( A ) ( (int) A)
+    #define texmap64_store( A ) ( (uint64_t) A)
     #define texmap64_retrieve( A ) ( (char*) A)
 #endif // SIZEOF_CHARP
 

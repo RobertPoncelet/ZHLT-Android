@@ -62,12 +62,18 @@ static void     MakeTnode(const int nodenum)
 void            MakeTnodes(dmodel_t* /*bm*/)
 {
     // 32 byte align the structs
+
+    // Allocate memory for (1 + numnodes) nodes which tnodes will now point to
     tnodes = (tnode_t*)calloc((g_numnodes + 1), sizeof(tnode_t));
 
 #if SIZEOF_CHARP == 8
     tnodes = (tnode_t*)(((long long)tnodes + 31) & ~31);
 #else
-    tnodes = (tnode_t*)(((int)tnodes + 31) & ~31);
+    // First cast the tnodes pointer to a 64-bit int
+    // Then add 31 to it
+    // Take the result and mask it by the more significant half of the bits
+    // I guess this aligns it in memory, right?
+    tnodes = (tnode_t*)(((uint64_t)tnodes + 31) & ~31);
 #endif
     tnode_p = tnodes;
 
