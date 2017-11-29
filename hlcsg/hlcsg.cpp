@@ -1204,7 +1204,8 @@ static void     Usage()
 #endif
     Log("    mapfile          : The mapfile to compile\n\n");
 
-    exit(1);
+    //exit(1);
+    throw "Fatal exception!";
 }
 
 // =====================================================================================
@@ -1877,6 +1878,7 @@ int             hlcsg_main(hlcsg_args_t args) {
     if (g_numthreads < 1) {
         Log("Expected value of at least 1 for '-threads'\n");
         Usage();
+        return 1;
     }
 
 #ifdef SYSTEM_WIN32
@@ -1983,6 +1985,7 @@ int             hlcsg_main(hlcsg_args_t args) {
         // what a shame.
         Log("No mapfile specified\n");
         Usage();
+        return 1;
     }
 
     // handle mapname

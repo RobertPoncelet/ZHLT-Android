@@ -20,6 +20,8 @@ typedef enum
 }
 developer_level_t;
 
+int start_logger(const char *app_name);
+
 //
 // log.c globals
 //

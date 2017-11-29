@@ -29,6 +29,10 @@
 #include "log.h"
 #include "filelib.h"
 
+#include <android/log.h>
+#include <pthread.h>
+#include <exception>
+
 char*           g_Program = "Uninitialized variable ::g_Program";
 char            g_Mapname[_MAX_PATH] = "Uninitialized variable ::g_Mapname";
 
@@ -41,6 +45,42 @@ unsigned long   g_nextclientid = 0;
 
 static FILE*    CompileLog = NULL;
 static bool     fatal = false;
+
+static int pfd[2];
+static pthread_t thr;
+static const char *tag = "ZHLT";
+
+static void *thread_func(void*)
+{
+    ssize_t rdsz;
+    char buf[128];
+    while((rdsz = read(pfd[0], buf, sizeof buf - 1)) > 0) {
+        if(buf[rdsz - 1] == '\n') --rdsz;
+        buf[rdsz] = 0;  /* add null-terminator */
+        __android_log_write(ANDROID_LOG_DEBUG, tag, buf);
+    }
+    return 0;
+}
+
+int start_logger(const char *app_name)
+{
+    tag = app_name;
+
+    /* make stdout line-buffered and stderr unbuffered */
+    setvbuf(stdout, 0, _IOLBF, 0);
+    setvbuf(stderr, 0, _IONBF, 0);
+
+    /* create the pipe and redirect stdout and stderr */
+    pipe(pfd);
+    dup2(pfd[1], 1);
+    dup2(pfd[1], 2);
+
+    /* spawn the logging thread */
+    if(pthread_create(&thr, 0, thread_func, 0) == -1)
+        return -1;
+    pthread_detach(thr);
+    return 0;
+}
 
 ////////
 
@@ -116,7 +156,8 @@ void            CheckForErrorLog()
             Log(">> There was a problem compiling the map.\n"
                 ">> Check the file %s.log for the cause.\n",
                  g_Mapname);
-            exit(1);
+            //exit(1);
+            throw "Fatal exception!";
         }
     }
 }
@@ -266,7 +307,8 @@ void            CheckFatal()
     if (fatal)
     {
         hlassert(false);
-        exit(1);
+        throw "Fatal exception!";
+        //exit(1);
     }
 }
 
