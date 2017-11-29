@@ -1,5 +1,7 @@
-hlbsp/build/*
-hlcsg/build/*
-hlrad/build/*
-hlvis/build/*
-build/*
+/build
+/.externalNativeBuild/
+
+/src/main/cpp/hlbsp/build/
+/src/main/cpp/hlcsg/build/
+/src/main/cpp/hlrad/build/
+/src/main/cpp/hlvis/build/
