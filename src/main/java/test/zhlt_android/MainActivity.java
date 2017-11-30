@@ -2,8 +2,11 @@ package test.zhlt_android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.TextView;
+
+import java.io.File;
 
 public class MainActivity extends Activity {
 
@@ -20,12 +23,17 @@ public class MainActivity extends Activity {
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);
         Log.d("ZHLT", "started");
-        tv.setText(stringFromJNI());
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+            tv.setText(hlcsgMain(getFilesDir().getAbsolutePath() + "/test.map"));
+        } else {
+            tv.setText("External storage unavailable");
+        }
     }
 
     /**
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    public native String stringFromJNI();
+    public native String hlcsgMain(String filePath);
 }

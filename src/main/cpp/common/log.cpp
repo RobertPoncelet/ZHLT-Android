@@ -46,6 +46,9 @@ unsigned long   g_nextclientid = 0;
 static FILE*    CompileLog = NULL;
 static bool     fatal = false;
 
+// Redirected stdout and stderr code from:
+// https://codelab.wordpress.com/2014/11/03/how-to-use-standard-output-streams-for-logging-in-android-apps/
+
 static int pfd[2];
 static pthread_t thr;
 static const char *tag = "ZHLT";

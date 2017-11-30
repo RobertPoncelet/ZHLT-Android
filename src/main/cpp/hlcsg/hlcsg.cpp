@@ -1918,16 +1918,18 @@ int             hlcsg_main(hlcsg_args_t args) {
 
 #ifdef HLCSG_WADCFG
     // AJM: added in -wadconfig
-    safe_strncpy(wadconfigname, args.wadConfigName.c_str(), MAX_WAD_CFG_NAME);
-    if (args.wadConfigName.length() > MAX_WAD_CFG_NAME) {
-        Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
-        wadconfigname[MAX_WAD_CFG_NAME] = 0;
+    if (args.wadConfigName != "") {
+        safe_strncpy(wadconfigname, args.wadConfigName.c_str(), MAX_WAD_CFG_NAME);
+        if (args.wadConfigName.length() > MAX_WAD_CFG_NAME) {
+            Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
+            wadconfigname[MAX_WAD_CFG_NAME] = 0;
+        }
     }
     //JK: added in -wadcfgfile
     //g_wadcfgfile = args.wadCfgFile.c_str(); // TODO: fix later i guess?
 #endif
 #ifdef HLCSG_NULLIFY_INVISIBLE
-    g_nullfile = args.nullFile.c_str();
+    g_nullfile = args.nullFile == "" ? NULL : args.nullFile.c_str();
 #endif
 
 #ifdef HLCSG_AUTOWAD // AJM
@@ -1976,7 +1978,7 @@ int             hlcsg_main(hlcsg_args_t args) {
 
     g_BrushUnionThreshold = args.brushUnionThreshold;
     g_tiny_threshold = args.tinyThreshold;
-    g_hullfile = args.hullfile.c_str();
+    g_hullfile = args.hullfile == "" ? NULL : args.hullfile.c_str();
     mapname_from_arg = args.mapName.c_str();
 
     // no mapfile?

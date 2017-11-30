@@ -5,9 +5,10 @@
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_test_zhlt_1android_MainActivity_stringFromJNI(
+Java_test_zhlt_1android_MainActivity_hlcsgMain(
         JNIEnv *env,
-        jobject /* this */) {
+        jobject /* this */,
+        jstring filePath) {
     std::string hello = "Hello from C++";
 
     start_logger("ZHLT");
@@ -29,7 +30,10 @@ Java_test_zhlt_1android_MainActivity_stringFromJNI(
     args.numThreads = 1;
     args.onlyEnts = false;
     args.skyClip = false;
-    args.mapName = "test.map";
+    args.threadPriority = 0;
+    const char* cpath = (*env).GetStringUTFChars(filePath, 0);
+    args.mapName = std::string(cpath);
+    (*env).ReleaseStringUTFChars(filePath, cpath);
 
     try {
         hlcsg_main(args);
