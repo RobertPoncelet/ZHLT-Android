@@ -1359,6 +1359,9 @@ void InitGlobals()
     g_dsurfedges =      new int             [MAX_MAP_SURFEDGES]();
     g_entities =        new entity_t        [MAX_MAP_ENTITIES]();
 
+    g_mapbrushes =      new brush_t         [MAX_MAP_BRUSHES]();
+    g_brushsides =      new side_t          [MAX_MAP_SIDES]();
+    g_mapplanes =       new plane_t         [MAX_MAP_PLANES]();
 }
 
 // =====================================================================================
@@ -1373,47 +1376,12 @@ void            CleanUpGlobals()
 {
     g_nummapbrushes = 0;
     delete[] g_mapbrushes;
-    /*for (int i = 0; i < MAX_MAP_BRUSHES; ++i)
-    {
-        brush_t* b = &g_mapbrushes[i];
-        b->brushnum = 0;
-        b->contents = 0;
-        b->entitynum = 0;
-        b->firstside = 0;
-        b->noclip = 0;
-        b->numsides = 0;
-        for (int j = 0; j < NUM_HULLS; ++j)
-        {
-            b->hulls[j].bounds.reset();
-            b->hulls[j].faces = NULL;
-        }
-    }*/
 
     g_numbrushsides = 0;
     delete[] g_brushsides;
-    /*for (int i = 0; i < MAX_MAP_SIDES; ++i)
-    {
-        side_t* s = &g_brushsides[i];
-        for (int j = 0; j < 3; ++j)
-        {
-            VectorCopy(vec3_origin, s->planepts[j]);
-        }
-        s->td.name[0] = 0;
-        s->td.txcommand = 0;
-    }*/
 
     g_nummapplanes = 0;
     delete[] g_mapplanes;
-    /*for (int i = 0; i < MAX_INTERNAL_MAP_PLANES; ++i)
-    {
-        plane_t* p = &g_mapplanes[i];
-        p->dist = 0.0;
-        VectorCopy(vec3_origin, p->origin);
-        VectorCopy(vec3_origin, p->normal);
-    }*/
-
-    // TODO: check what this is for and whether I need to delet this
-    g_numUsedTextures = 0;
 
     g_numclipnodes = 0;
     delete[] g_dclipnodes;
@@ -1451,11 +1419,15 @@ void            CleanUpGlobals()
     g_numvertexes = 0;
     delete[] g_dvertexes;
 
-    g_iNumWadPaths = 0;
-    //delete[] g_szWadPaths;
-
     g_visdatasize = 0;
     delete[] g_dvisdata;
+
+    g_numUsedTextures = 0;
+
+    g_iNumWadPaths = 0;
+
+    g_WadInclude.clear();
+    g_invisible_items.clear();
 }
 
 // =====================================================================================

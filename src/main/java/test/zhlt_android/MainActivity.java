@@ -22,10 +22,10 @@ public class MainActivity extends Activity {
 
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);
-        Log.d("ZHLT-Android", "started");
+        Log.d("ZHLT-Android", "==================== STARTED ====================");
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-            tv.setText(hlcsgMain(getFilesDir().getAbsolutePath() + "/test.map"));
+            //File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+            tv.setText(hlcsgMain(getFilesDir().getPath() + "/test.map"));
         } else {
             tv.setText("External storage unavailable");
         }
