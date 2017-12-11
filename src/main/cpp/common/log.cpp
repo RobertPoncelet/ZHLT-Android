@@ -51,7 +51,7 @@ static bool     fatal = false;
 
 static int pfd[2];
 static pthread_t thr;
-static const char *tag = "ZHLT";
+static const char *tag = "ZHLT-Android";
 
 static void *thread_func(void*)
 {
@@ -160,7 +160,7 @@ void            CheckForErrorLog()
                 ">> Check the file %s.log for the cause.\n",
                  g_Mapname);
             //exit(1);
-            throw "Fatal exception!";
+            throw 1;
         }
     }
 }
@@ -310,7 +310,7 @@ void            CheckFatal()
     if (fatal)
     {
         hlassert(false);
-        throw "Fatal exception!";
+        throw 1;
         //exit(1);
     }
 }

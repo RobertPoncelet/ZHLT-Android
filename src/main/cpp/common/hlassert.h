@@ -26,7 +26,7 @@
 
 #include "log.h"
 
-#define assume(exp, message) {if (!(exp)) {Log("\n***** ERROR *****\nAssume '%s' failed\n at %s:%d\n %s\n\n", #exp, __FILE__, __LINE__, message);  throw "Fatal exception!"; }}
+#define assume(exp, message) {if (!(exp)) {Log("\n***** ERROR *****\nAssume '%s' failed\n at %s:%d\n %s\n\n", #exp, __FILE__, __LINE__, message);  throw 1; }}
 #define hlassert(exp) assume(exp, "")
 
 #else // _DEBUG

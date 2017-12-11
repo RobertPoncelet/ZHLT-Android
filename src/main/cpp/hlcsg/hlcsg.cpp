@@ -1205,7 +1205,7 @@ static void     Usage()
     Log("    mapfile          : The mapfile to compile\n\n");
 
     //exit(1);
-    throw "Fatal exception!";
+    throw 1;
 }
 
 // =====================================================================================
@@ -1341,514 +1341,121 @@ void            CSGCleanup()
     FreeWadPaths();
 }
 
-// =====================================================================================
-//  Main
-//      Oh, come on.
-// =====================================================================================
-int             exe_main(const int argc, char** argv)
+void InitGlobals()
 {
-    int             i;                          
-    char            name[_MAX_PATH];            // mapanme 
-    double          start, end;                 // start/end time log
-    const char*     mapname_from_arg = NULL;    // mapname path from passed argvar
+    g_dmodels =         new dmodel_t        [MAX_MAP_MODELS]();
+    g_dvisdata =        new byte            [MAX_MAP_VISIBILITY]();
+    g_dentdata =        new char            [MAX_MAP_ENTSTRING]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dplanes =         new dplane_t        [MAX_INTERNAL_MAP_PLANES]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dvertexes =       new dvertex_t       [MAX_MAP_VERTS]();
+    g_dnodes =          new dnode_t         [MAX_MAP_NODES]();
+    g_texinfo =         new texinfo_t       [MAX_MAP_TEXINFO]();
+    g_dfaces =          new dface_t         [MAX_MAP_FACES]();
+    g_dclipnodes =      new dclipnode_t     [MAX_MAP_CLIPNODES]();
+    g_dedges =          new dedge_t         [MAX_MAP_EDGES]();
+    g_dmarksurfaces =   new unsigned short  [MAX_MAP_MARKSURFACES]();
+    g_dsurfedges =      new int             [MAX_MAP_SURFEDGES]();
+    g_entities =        new entity_t        [MAX_MAP_ENTITIES]();
 
-    g_Program = "hlcsg";
+}
 
-    if (argc == 1)
-        Usage();
-
-    // Hard coded list of -wadinclude files, used for HINT texture brushes so lazy
-    // mapmakers wont cause beta testers (or possibly end users) to get a wad 
-    // error on zhlt.wad etc
-    g_WadInclude.push_back("zhlt.wad");
-
-    memset(wadconfigname, 0, sizeof(wadconfigname));//AJM
-
-    // detect argv
-    for (i = 1; i < argc; i++)
+// =====================================================================================
+//  CleanUpGlobals()
+//           _---_______
+//          / ///      _|  delet this
+//         /    _______|
+//        /    /(/
+//       /____/
+// =====================================================================================
+void            CleanUpGlobals()
+{
+    g_nummapbrushes = 0;
+    delete[] g_mapbrushes;
+    /*for (int i = 0; i < MAX_MAP_BRUSHES; ++i)
     {
-        if (!strcasecmp(argv[i], "-threads"))
+        brush_t* b = &g_mapbrushes[i];
+        b->brushnum = 0;
+        b->contents = 0;
+        b->entitynum = 0;
+        b->firstside = 0;
+        b->noclip = 0;
+        b->numsides = 0;
+        for (int j = 0; j < NUM_HULLS; ++j)
         {
-            if (i < argc)
-            {
-                g_numthreads = atoi(argv[++i]);
-                if (g_numthreads < 1)
-                {
-                    Log("Expected value of at least 1 for '-threads'\n");
-                    Usage();
-                }
-            }
-            else
-            {
-                Usage();
-            }
+            b->hulls[j].bounds.reset();
+            b->hulls[j].faces = NULL;
         }
+    }*/
 
-#ifdef SYSTEM_WIN32
-        else if (!strcasecmp(argv[i], "-estimate"))
-        {
-            g_estimate = true;
-        }
-#endif
-
-#ifdef SYSTEM_POSIX
-        else if (!strcasecmp(argv[i], "-noestimate"))
-        {
-            g_estimate = false;
-        }
-#endif
-
-        else if (!strcasecmp(argv[i], "-dev"))
-        {
-            if (i < argc)
-            {
-                g_developer = (developer_level_t)atoi(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-verbose"))
-        {
-            g_verbose = true;
-        }
-        else if (!strcasecmp(argv[i], "-noinfo"))
-        {
-            g_info = false;
-        }
-        else if (!strcasecmp(argv[i], "-chart"))
-        {
-            g_chart = true;
-        }
-        else if (!strcasecmp(argv[i], "-low"))
-        {
-            g_threadpriority = eThreadPriorityLow;
-        }
-        else if (!strcasecmp(argv[i], "-high"))
-        {
-            g_threadpriority = eThreadPriorityHigh;
-        }
-        else if (!strcasecmp(argv[i], "-nolog"))
-        {
-            g_log = false;
-        }
-        else if (!strcasecmp(argv[i], "-skyclip"))
-        {
-            g_skyclip = true;
-        }
-        else if (!strcasecmp(argv[i], "-noskyclip"))
-        {
-            g_skyclip = false;
-        }
-        else if (!strcasecmp(argv[i], "-noclip"))
-        {
-            g_noclip = true;
-        }
-        else if (!strcasecmp(argv[i], "-onlyents"))
-        {
-            g_onlyents = true;
-        }
-
-#ifdef ZHLT_NULLTEX  // AJM: added in -nonulltex
-        else if (!strcasecmp(argv[i], "-nonulltex"))
-        {
-            g_bUseNullTex = false;
-        }
-#endif
-
-#ifdef HLCSG_CLIPECONOMY    // AJM: added in -noclipeconomy
-        else if (!strcasecmp(argv[i], "-noclipeconomy"))
-        {
-            g_bClipNazi = false;
-        }
-#endif
-
-#ifdef HLCSG_PRECISIONCLIP	// KGP: added in -cliptype
-		else if (!strcasecmp(argv[i], "-cliptype"))
-		{
-			if (i < argc)
-			{
-				++i;
-				if(!strcasecmp(argv[i],"smallest"))
-				{ g_cliptype = clip_smallest; }
-				else if(!strcasecmp(argv[i],"normalized"))
-				{ g_cliptype = clip_normalized; }
-				else if(!strcasecmp(argv[i],"simple"))
-				{ g_cliptype = clip_simple; }
-				else if(!strcasecmp(argv[i],"precise"))
-				{ g_cliptype = clip_precise; }
-				else if(!strcasecmp(argv[i],"legacy"))
-				{ g_cliptype = clip_legacy; }
-			}
-            else
-            {
-                Log("Error: -cliptype: incorrect usage of parameter\n");
-                Usage();
-            }
-		}
-#endif
-
-#ifdef HLCSG_WADCFG
-        // AJM: added in -wadconfig
-        else if (!strcasecmp(argv[i], "-wadconfig"))
-        { 
-            if (i < argc)
-            {
-                safe_strncpy(wadconfigname, argv[++i], MAX_WAD_CFG_NAME);
-                if (strlen(argv[i]) > MAX_WAD_CFG_NAME)
-                {
-                    Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
-                    wadconfigname[MAX_WAD_CFG_NAME] = 0;
-                }
-            }
-            else
-            {
-                Log("Error: -wadconfig: incorrect usage of parameter\n");
-                Usage();
-            }
-        }
-
-        //JK: added in -wadcfgfile
-        else if (!strcasecmp(argv[i], "-wadcfgfile"))
-        {
-            if (i < argc)
-            {
-                g_wadcfgfile = argv[++i];
-            }
-            else
-            {
-            	Log("Error: -wadcfgfile: incorrect usage of parameter\n");
-                Usage();
-            }
-        }
-#endif
-#ifdef HLCSG_NULLIFY_INVISIBLE
-		else if (!strcasecmp(argv[i], "-nullfile"))
-		{
-            if (i < argc)
-            {
-                g_nullfile = argv[++i];
-            }
-            else
-            {
-            	Log("Error: -nullfile: expected path to null ent file following parameter\n");
-                Usage();
-            }
-		}
-#endif
-
-#ifdef HLCSG_AUTOWAD // AJM
-        else if (!strcasecmp(argv[i], "-wadautodetect"))
-        { 
-            g_bWadAutoDetect = true;
-        }
-#endif
-
-#ifdef ZHLT_DETAIL // AJM
-        else if (!strcasecmp(argv[i], "-nodetail"))
-        {
-            g_bDetailBrushes = false;
-        }
-#endif
-
-#ifdef ZHLT_PROGRESSFILE // AJM
-        else if (!strcasecmp(argv[i], "-progressfile"))
-        {
-            if (i < argc)
-            {
-                g_progressfile = argv[++i];
-            }
-            else
-            {
-            	Log("Error: -progressfile: expected path to progress file following parameter\n");
-                Usage();
-            }
-        }
-#endif
-
-        else if (!strcasecmp(argv[i], "-nowadtextures"))
-        {
-            g_wadtextures = false;
-        }
-        else if (!strcasecmp(argv[i], "-wadinclude"))
-        {
-            if (i < argc)
-            {
-                g_WadInclude.push_back(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-texdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
-
-                if (x > g_max_map_miptex)
-                {
-                    g_max_map_miptex = x;
-                }
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-lightdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
-
-                if (x > g_max_map_lightdata)
-                {
-                    g_max_map_lightdata = x;
-                }
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-brushunion"))
-        {
-            if (i < argc)
-            {
-                g_BrushUnionThreshold = (float)atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-tiny"))
-        {
-            if (i < argc)
-            {
-                g_tiny_threshold = (float)atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-hullfile"))
-        {
-            if (i < argc)
-            {
-                g_hullfile = argv[++i];
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (argv[i][0] == '-')
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
-            Usage();
-        }
-        else if (!mapname_from_arg)
-        {
-            mapname_from_arg = argv[i];
-        }
-        else
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
-            Usage();
-        }
-    }
-
-    // no mapfile?
-    if (!mapname_from_arg)
+    g_numbrushsides = 0;
+    delete[] g_brushsides;
+    /*for (int i = 0; i < MAX_MAP_SIDES; ++i)
     {
-        // what a shame.
-        Log("No mapfile specified\n");
-        Usage();
-    }
-
-    // handle mapname
-    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
-    FlipSlashes(g_Mapname);
-    StripExtension(g_Mapname);
-
-    // onlyents
-    if (!g_onlyents)
-        ResetTmpFiles();
-
-    // other stuff
-    ResetErrorLog();                     
-    ResetLog();                          
-    OpenLog(g_clientid);                  
-    atexit(CloseLog);                       
-    LogStart(argc, argv);                   
-    atexit(CSGCleanup); // AJM
-    dtexdata_init();                        
-    atexit(dtexdata_free);
-
-    // START CSG
-    // AJM: re-arranged some stuff up here so that the mapfile is loaded
-    //  before settings are finalised and printed out, so that the info_compile_parameters
-    //  entity can be dealt with effectively
-    start = I_FloatTime();
-    
-    LoadHullfile(g_hullfile);               // if the user specified a hull file, load it now
-#ifdef HLCSG_NULLIFY_INVISIBLE
-	if(g_bUseNullTex)
-	{ properties_initialize(g_nullfile); }
-#endif
-    safe_strncpy(name, mapname_from_arg, _MAX_PATH); // make a copy of the nap name
-    DefaultExtension(name, ".map");                  // might be .reg
-    
-    LoadMapFile(name);
-    ThreadSetDefault();                    
-    ThreadSetPriority(g_threadpriority);  
-    Settings();
-
-
-#ifdef HLCSG_WADCFG // AJM
-    // figure out what to do with the texture settings
-    if (wadconfigname[0])           // custom wad configuations will take precedence
-    {
-        LoadWadConfigFile();
-        ProcessWadConfiguration();
-    }
-    else
-    {
-        Log("Using mapfile wad configuration\n");
-    }
-    if (!g_bWadConfigsLoaded)  // dont try and override wad.cfg
-#endif
-    {
-        GetUsedWads(); 
-    }
-
-#ifdef HLCSG_AUTOWAD
-    if (g_bWadAutoDetect)
-    {
-        Log("Wadfiles not in use by the map will be excluded\n");
-    }
-#endif
-
-    DumpWadinclude();
-    Log("\n");
-
-    // if onlyents, just grab the entites and resave
-    if (g_onlyents)
-    {
-        char            out[_MAX_PATH];
-
-        safe_snprintf(out, _MAX_PATH, "%s.bsp", g_Mapname);
-        LoadBSPFile(out);
-        LoadWadincludeFile(g_Mapname);
-
-        HandleWadinclude();
-
-        // Write it all back out again.
-        if (g_chart)
+        side_t* s = &g_brushsides[i];
+        for (int j = 0; j < 3; ++j)
         {
-            PrintBSPFileSizes();
+            VectorCopy(vec3_origin, s->planepts[j]);
         }
-        WriteBSP(g_Mapname);
+        s->td.name[0] = 0;
+        s->td.txcommand = 0;
+    }*/
 
-        end = I_FloatTime();
-        LogTimeElapsed(end - start);
-        return 0;
-    }
-    else
-    {
-        SaveWadincludeFile(g_Mapname);
-    }
-
-#ifdef HLCSG_CLIPECONOMY // AJM
-    CheckForNoClip(); 
-#endif
-
-    // createbrush
-    NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CreateBrush);
-    CheckFatal();
-
-#ifdef HLCSG_PRECISIONCLIP // KGP - drop TEX_BEVEL flag
-	FixBevelTextures();
-#endif
-
-    // boundworld
-    BoundWorld();
-
-    Verbose("%5i map planes\n", g_nummapplanes);
-
-    // Set model centers
-    NamedRunThreadsOnIndividual(g_numentities, g_estimate, SetModelCenters);
-
-    // Calc brush unions
-    if ((g_BrushUnionThreshold > 0.0) && (g_BrushUnionThreshold <= 100.0))
-    {
-        NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CalculateBrushUnions);
-    }
-
-    // open hull files
-    for (i = 0; i < NUM_HULLS; i++)
-    {
-        char            name[_MAX_PATH];
-
-        safe_snprintf(name, _MAX_PATH, "%s.p%i", g_Mapname, i);
-
-        out[i] = fopen(name, "w");
-
-        if (!out[i]) 
-            Error("Couldn't open %s", name);
-    }
-
-    ProcessModels();
-
-    Verbose("%5i csg faces\n", c_csgfaces);
-    Verbose("%5i used faces\n", c_outfaces);
-    Verbose("%5i tiny faces\n", c_tiny);
-    Verbose("%5i tiny clips\n", c_tiny_clip);
-
-    // close hull files 
-    for (i = 0; i < NUM_HULLS; i++)
-        fclose(out[i]);
-
-    EmitPlanes();
-
-    if (g_chart)
-        PrintBSPFileSizes();
-
-    WriteBSP(g_Mapname);
-
-    // AJM: debug
-#if 0
-    Log("\n---------------------------------------\n"
-        "Map Plane Usage:\n"
-        "  #  normal             origin             dist   type\n"
-        "    (   x,    y,    z) (   x,    y,    z) (     )\n"
-        );
-    for (i = 0; i < g_nummapplanes; i++)
+    g_nummapplanes = 0;
+    delete[] g_mapplanes;
+    /*for (int i = 0; i < MAX_INTERNAL_MAP_PLANES; ++i)
     {
         plane_t* p = &g_mapplanes[i];
+        p->dist = 0.0;
+        VectorCopy(vec3_origin, p->origin);
+        VectorCopy(vec3_origin, p->normal);
+    }*/
 
-        Log(
-        "%3i (%4.0f, %4.0f, %4.0f) (%4.0f, %4.0f, %4.0f) (%5.0f) %i\n",
-        i,     
-        p->normal[1], p->normal[2], p->normal[3],
-        p->origin[1], p->origin[2], p->origin[3],
-        p->dist,
-        p->type
-        );
-    }
-    Log("---------------------------------------\n\n");
-#endif
+    // TODO: check what this is for and whether I need to delet this
+    g_numUsedTextures = 0;
 
-    // elapsed time
-    end = I_FloatTime();
-    LogTimeElapsed(end - start);
+    g_numclipnodes = 0;
+    delete[] g_dclipnodes;
 
-    return 0;
+    g_numedges = 0;
+    delete[] g_dedges;
+
+    g_numentities = 0;
+    delete[] g_entities;
+
+    g_numfaces = 0;
+    delete[] g_dfaces;
+
+    g_numleafs = 0;
+    delete[] g_dleafs;
+
+    g_nummarksurfaces = 0;
+    delete[] g_dmarksurfaces;
+
+    g_nummodels = 0;
+    delete[] g_dmodels;
+
+    g_numnodes = 0;
+    delete[] g_dnodes;
+
+    g_numplanes = 0;
+    delete[] g_dplanes;
+
+    g_numsurfedges = 0;
+    delete[] g_dsurfedges;
+
+    g_numtexinfo = 0;
+    delete[] g_texinfo;
+
+    g_numvertexes = 0;
+    delete[] g_dvertexes;
+
+    g_iNumWadPaths = 0;
+    //delete[] g_szWadPaths;
+
+    g_visdatasize = 0;
+    delete[] g_dvisdata;
 }
 
 // =====================================================================================
@@ -1856,316 +1463,322 @@ int             exe_main(const int argc, char** argv)
 //      Oh, come on.
 // =====================================================================================
 int             hlcsg_main(hlcsg_args_t args) {
-    int i;
-    char name[_MAX_PATH];            // mapanme
-    double start, end;                 // start/end time log
-    const char *mapname_from_arg = NULL;    // mapname path from passed argvar
+    try {
+        int i;
+        char name[_MAX_PATH];            // mapanme
+        double start, end;                 // start/end time log
+        const char *mapname_from_arg = NULL;    // mapname path from passed argvar
 
-    g_Program = "hlcsg";
+        g_Program = "hlcsg";
 
-    // Hard coded list of -wadinclude files, used for HINT texture brushes so lazy
-    // mapmakers wont cause beta testers (or possibly end users) to get a wad
-    // error on zhlt.wad etc
-    g_WadInclude.push_back("zhlt.wad");
+        // Hard coded list of -wadinclude files, used for HINT texture brushes so lazy
+        // mapmakers wont cause beta testers (or possibly end users) to get a wad
+        // error on zhlt.wad etc
+        g_WadInclude.push_back("zhlt.wad");
 
-    memset(wadconfigname, 0, sizeof(wadconfigname));//AJM
+        memset(wadconfigname, 0, sizeof(wadconfigname));//AJM
 
+        // detect argv
 
-
-    // detect argv
-
-    g_numthreads = args.numThreads;
-    if (g_numthreads < 1) {
-        Log("Expected value of at least 1 for '-threads'\n");
-        Usage();
-        return 1;
-    }
+        g_numthreads = args.numThreads;
+        if (g_numthreads < 1) {
+            Log("Expected value of at least 1 for '-threads'\n");
+            Usage();
+            throw 1;
+        }
 
 #ifdef SYSTEM_WIN32
-    else if (!strcasecmp(argv[i], "-estimate"))
-{
-    g_estimate = true;
-}
+        else if (!strcasecmp(argv[i], "-estimate"))
+    {
+        g_estimate = true;
+    }
 #endif
 
 #ifdef SYSTEM_POSIX
-    g_estimate = args.estimate;
+        g_estimate = args.estimate;
 #endif
 
-    g_developer = (developer_level_t) args.developerLevel;
-    g_verbose = args.verbose;
-    g_info = args.info;
-    g_chart = args.chart;
-    g_threadpriority = args.threadPriority <= -1 ? eThreadPriorityLow :
-                       args.threadPriority >= 1 ? eThreadPriorityHigh :
-                       eThreadPriorityNormal;
-    g_log = args.log;
-    g_skyclip = args.skyClip;
-    g_noclip = args.noClip;
-    g_onlyents = args.onlyEnts;
+        g_developer = (developer_level_t) args.developerLevel;
+        g_verbose = args.verbose;
+        g_info = args.info;
+        g_chart = args.chart;
+        g_threadpriority = args.threadPriority <= -1 ? eThreadPriorityLow :
+                           args.threadPriority >= 1 ? eThreadPriorityHigh :
+                           eThreadPriorityNormal;
+        g_log = args.log;
+        g_skyclip = args.skyClip;
+        g_noclip = args.noClip;
+        g_onlyents = args.onlyEnts;
 
 #ifdef ZHLT_NULLTEX  // AJM: added in -nonulltex
-    g_bUseNullTex = args.useNullTex;
+        g_bUseNullTex = args.useNullTex;
 #endif
 
 #ifdef HLCSG_CLIPECONOMY    // AJM: added in -noclipeconomy
-    g_bClipNazi = args.clipNazi;
+        g_bClipNazi = args.clipNazi;
 #endif
 
 #ifdef HLCSG_PRECISIONCLIP    // KGP: added in -cliptype
-    g_cliptype = (cliptype)args.clipType;
+        g_cliptype = (cliptype) args.clipType;
 #endif
 
 #ifdef HLCSG_WADCFG
-    // AJM: added in -wadconfig
-    if (args.wadConfigName != "") {
-        safe_strncpy(wadconfigname, args.wadConfigName.c_str(), MAX_WAD_CFG_NAME);
-        if (args.wadConfigName.length() > MAX_WAD_CFG_NAME) {
-            Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
-            wadconfigname[MAX_WAD_CFG_NAME] = 0;
+        // AJM: added in -wadconfig
+        if (args.wadConfigName != "") {
+            safe_strncpy(wadconfigname, args.wadConfigName.c_str(), MAX_WAD_CFG_NAME);
+            if (args.wadConfigName.length() > MAX_WAD_CFG_NAME) {
+                Warning("wad configuration name was truncated to %i chars", MAX_WAD_CFG_NAME);
+                wadconfigname[MAX_WAD_CFG_NAME] = 0;
+            }
         }
-    }
-    //JK: added in -wadcfgfile
-    //g_wadcfgfile = args.wadCfgFile.c_str(); // TODO: fix later i guess?
+        //JK: added in -wadcfgfile
+        //g_wadcfgfile = args.wadCfgFile.c_str(); // TODO: fix later i guess?
 #endif
 #ifdef HLCSG_NULLIFY_INVISIBLE
-    g_nullfile = args.nullFile == "" ? NULL : args.nullFile.c_str();
+        g_nullfile = args.nullFile == "" ? NULL : args.nullFile.c_str();
 #endif
 
 #ifdef HLCSG_AUTOWAD // AJM
-    g_bWadAutoDetect = args.wadAutoDetect;
+        g_bWadAutoDetect = args.wadAutoDetect;
 #endif
 
 #ifdef ZHLT_DETAIL // AJM
-    else if (!strcasecmp(argv[i], "-nodetail"))
-{
-    g_bDetailBrushes = false;
-}
+        else if (!strcasecmp(argv[i], "-nodetail"))
+    {
+        g_bDetailBrushes = false;
+    }
 #endif
 
 #ifdef ZHLT_PROGRESSFILE // AJM
-    else if (!strcasecmp(argv[i], "-progressfile"))
-{
-    if (i < argc)
+        else if (!strcasecmp(argv[i], "-progressfile"))
     {
-        g_progressfile = argv[++i];
+        if (i < argc)
+        {
+            g_progressfile = argv[++i];
+        }
+        else
+        {
+            Log("Error: -progressfile: expected path to progress file following parameter\n");
+            Usage();
+        }
     }
-    else
-    {
-        Log("Error: -progressfile: expected path to progress file following parameter\n");
-        Usage();
-    }
-}
 #endif
-    g_wadtextures = args.wadTextures;
+        g_wadtextures = args.wadTextures;
 
-    for (auto wad : args.wadInclude)
-    {
-        g_WadInclude.push_back(wad);
-    }
+        for (auto wad : args.wadInclude) {
+            g_WadInclude.push_back(wad);
+        }
 
-    int x = args.texData * 1024;
-    if (x > g_max_map_miptex)
-    {
-        g_max_map_miptex = x;
-    }
+        int x = args.texData * 1024;
+        if (x > g_max_map_miptex) {
+            g_max_map_miptex = x;
+        }
 
-    x = args.lightData * 1024;
-    if (x > g_max_map_lightdata)
-    {
-        g_max_map_lightdata = x;
-    }
+        x = args.lightData * 1024;
+        if (x > g_max_map_lightdata) {
+            g_max_map_lightdata = x;
+        }
 
-    g_BrushUnionThreshold = args.brushUnionThreshold;
-    g_tiny_threshold = args.tinyThreshold;
-    g_hullfile = args.hullfile == "" ? NULL : args.hullfile.c_str();
-    mapname_from_arg = args.mapName.c_str();
+        g_BrushUnionThreshold = args.brushUnionThreshold;
+        g_tiny_threshold = args.tinyThreshold;
+        g_hullfile = args.hullfile == "" ? NULL : args.hullfile.c_str();
+        mapname_from_arg = args.mapName.c_str();
 
-    // no mapfile?
-    if (!mapname_from_arg)
-    {
-        // what a shame.
-        Log("No mapfile specified\n");
-        Usage();
-        return 1;
-    }
+        // no mapfile?
+        if (!mapname_from_arg) {
+            // what a shame.
+            Log("No mapfile specified\n");
+            Usage();
+            throw 1;
+        }
 
-    // handle mapname
-    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
-    FlipSlashes(g_Mapname);
-    StripExtension(g_Mapname);
+        // handle mapname
+        safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
+        FlipSlashes(g_Mapname);
+        StripExtension(g_Mapname);
 
-    // onlyents
-    if (!g_onlyents)
-        ResetTmpFiles();
+        // onlyents
+        if (!g_onlyents)
+            ResetTmpFiles();
 
-    // other stuff
-    ResetErrorLog();
-    ResetLog();
-    OpenLog(g_clientid);
-    atexit(CloseLog);
-    //LogStart(argc, argv); // TODO: logs
-    atexit(CSGCleanup); // AJM
-    dtexdata_init();
-    atexit(dtexdata_free);
+        // other stuff
+        ResetErrorLog();
+        ResetLog();
+        OpenLog(g_clientid);
+        //atexit(CloseLog);
+        //LogStart(argc, argv); // TODO: logs
+        //atexit(CSGCleanup); // AJM
+        dtexdata_init();
+        InitGlobals();
+        //atexit(dtexdata_free);
 
-    // START CSG
-    // AJM: re-arranged some stuff up here so that the mapfile is loaded
-    //  before settings are finalised and printed out, so that the info_compile_parameters
-    //  entity can be dealt with effectively
-    start = I_FloatTime();
+        // START CSG
+        // AJM: re-arranged some stuff up here so that the mapfile is loaded
+        //  before settings are finalised and printed out, so that the info_compile_parameters
+        //  entity can be dealt with effectively
+        start = I_FloatTime();
 
-    LoadHullfile(g_hullfile);               // if the user specified a hull file, load it now
+        LoadHullfile(g_hullfile);               // if the user specified a hull file, load it now
 #ifdef HLCSG_NULLIFY_INVISIBLE
-    if(g_bUseNullTex)
-    { properties_initialize(g_nullfile); }
+        if (g_bUseNullTex) { properties_initialize(g_nullfile); }
 #endif
-    safe_strncpy(name, mapname_from_arg, _MAX_PATH); // make a copy of the nap name
-    DefaultExtension(name, ".map");                  // might be .reg
+        safe_strncpy(name, mapname_from_arg, _MAX_PATH); // make a copy of the nap name
+        DefaultExtension(name, ".map");                  // might be .reg
 
-    LoadMapFile(name);
-    ThreadSetDefault();
-    ThreadSetPriority(g_threadpriority);
-    Settings();
+        LoadMapFile(name);
+        ThreadSetDefault();
+        ThreadSetPriority(g_threadpriority);
+        Settings();
 
 
 #ifdef HLCSG_WADCFG // AJM
-    // figure out what to do with the texture settings
-    if (wadconfigname[0])           // custom wad configuations will take precedence
-    {
-        LoadWadConfigFile();
-        ProcessWadConfiguration();
-    }
-    else
-    {
-        Log("Using mapfile wad configuration\n");
-    }
-    if (!g_bWadConfigsLoaded)  // dont try and override wad.cfg
+        // figure out what to do with the texture settings
+        if (wadconfigname[0])           // custom wad configuations will take precedence
+        {
+            LoadWadConfigFile();
+            ProcessWadConfiguration();
+        } else {
+            Log("Using mapfile wad configuration\n");
+        }
+        if (!g_bWadConfigsLoaded)  // dont try and override wad.cfg
 #endif
-    {
-        GetUsedWads();
-    }
+        {
+            GetUsedWads();
+        }
 
 #ifdef HLCSG_AUTOWAD
-    if (g_bWadAutoDetect)
-    {
-        Log("Wadfiles not in use by the map will be excluded\n");
-    }
+        if (g_bWadAutoDetect) {
+            Log("Wadfiles not in use by the map will be excluded\n");
+        }
 #endif
 
-    DumpWadinclude();
-    Log("\n");
+        DumpWadinclude();
+        Log("\n");
 
-    // if onlyents, just grab the entites and resave
-    if (g_onlyents)
-    {
-        char            out[_MAX_PATH];
+        // if onlyents, just grab the entites and resave
+        if (g_onlyents) {
+            char out[_MAX_PATH];
 
-        safe_snprintf(out, _MAX_PATH, "%s.bsp", g_Mapname);
-        LoadBSPFile(out);
-        LoadWadincludeFile(g_Mapname);
+            safe_snprintf(out, _MAX_PATH, "%s.bsp", g_Mapname);
+            LoadBSPFile(out);
+            LoadWadincludeFile(g_Mapname);
 
-        HandleWadinclude();
+            HandleWadinclude();
 
-        // Write it all back out again.
-        if (g_chart)
-        {
-            PrintBSPFileSizes();
+            // Write it all back out again.
+            if (g_chart) {
+                PrintBSPFileSizes();
+            }
+            WriteBSP(g_Mapname);
+
+            end = I_FloatTime();
+            LogTimeElapsed(end - start);
+
+            CloseLog();
+            CSGCleanup();
+            dtexdata_free();
+            CleanUpGlobals();
+
+            return 0;
+        } else {
+            SaveWadincludeFile(g_Mapname);
         }
-        WriteBSP(g_Mapname);
-
-        end = I_FloatTime();
-        LogTimeElapsed(end - start);
-        return 0;
-    }
-    else
-    {
-        SaveWadincludeFile(g_Mapname);
-    }
 
 #ifdef HLCSG_CLIPECONOMY // AJM
-    CheckForNoClip();
+        CheckForNoClip();
 #endif
 
-    // createbrush
-    NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CreateBrush);
-    CheckFatal();
+        // createbrush
+        NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CreateBrush);
+        CheckFatal();
 
 #ifdef HLCSG_PRECISIONCLIP // KGP - drop TEX_BEVEL flag
-    FixBevelTextures();
+        FixBevelTextures();
 #endif
 
-    // boundworld
-    BoundWorld();
+        // boundworld
+        BoundWorld();
 
-    Verbose("%5i map planes\n", g_nummapplanes);
+        Verbose("%5i map planes\n", g_nummapplanes);
 
-    // Set model centers
-    NamedRunThreadsOnIndividual(g_numentities, g_estimate, SetModelCenters);
+        // Set model centers
+        NamedRunThreadsOnIndividual(g_numentities, g_estimate, SetModelCenters);
 
-    // Calc brush unions
-    if ((g_BrushUnionThreshold > 0.0) && (g_BrushUnionThreshold <= 100.0))
-    {
-        NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CalculateBrushUnions);
-    }
+        // Calc brush unions
+        if ((g_BrushUnionThreshold > 0.0) && (g_BrushUnionThreshold <= 100.0)) {
+            NamedRunThreadsOnIndividual(g_nummapbrushes, g_estimate, CalculateBrushUnions);
+        }
 
-    // open hull files
-    for (i = 0; i < NUM_HULLS; i++)
-    {
-        char            name[_MAX_PATH];
+        // open hull files
+        for (i = 0; i < NUM_HULLS; i++) {
+            char name[_MAX_PATH];
 
-        safe_snprintf(name, _MAX_PATH, "%s.p%i", g_Mapname, i);
+            safe_snprintf(name, _MAX_PATH, "%s.p%i", g_Mapname, i);
 
-        out[i] = fopen(name, "w");
+            out[i] = fopen(name, "w");
 
-        if (!out[i])
-            Error("Couldn't open %s", name);
-    }
+            if (!out[i])
+                Error("Couldn't open %s", name);
+        }
 
-    ProcessModels();
+        ProcessModels();
 
-    Verbose("%5i csg faces\n", c_csgfaces);
-    Verbose("%5i used faces\n", c_outfaces);
-    Verbose("%5i tiny faces\n", c_tiny);
-    Verbose("%5i tiny clips\n", c_tiny_clip);
+        Verbose("%5i csg faces\n", c_csgfaces);
+        Verbose("%5i used faces\n", c_outfaces);
+        Verbose("%5i tiny faces\n", c_tiny);
+        Verbose("%5i tiny clips\n", c_tiny_clip);
 
-    // close hull files
-    for (i = 0; i < NUM_HULLS; i++)
-        fclose(out[i]);
+        // close hull files
+        for (i = 0; i < NUM_HULLS; i++)
+            fclose(out[i]);
 
-    EmitPlanes();
+        EmitPlanes();
 
-    if (g_chart)
-        PrintBSPFileSizes();
+        if (g_chart)
+            PrintBSPFileSizes();
 
-    WriteBSP(g_Mapname);
+        WriteBSP(g_Mapname);
 
-    // AJM: debug
+        // AJM: debug
 #if 0
-    Log("\n---------------------------------------\n"
-        "Map Plane Usage:\n"
-        "  #  normal             origin             dist   type\n"
-        "    (   x,    y,    z) (   x,    y,    z) (     )\n"
-        );
-    for (i = 0; i < g_nummapplanes; i++)
-    {
-        plane_t* p = &g_mapplanes[i];
+        Log("\n---------------------------------------\n"
+            "Map Plane Usage:\n"
+            "  #  normal             origin             dist   type\n"
+            "    (   x,    y,    z) (   x,    y,    z) (     )\n"
+            );
+        for (i = 0; i < g_nummapplanes; i++)
+        {
+            plane_t* p = &g_mapplanes[i];
 
-        Log(
-        "%3i (%4.0f, %4.0f, %4.0f) (%4.0f, %4.0f, %4.0f) (%5.0f) %i\n",
-        i,
-        p->normal[1], p->normal[2], p->normal[3],
-        p->origin[1], p->origin[2], p->origin[3],
-        p->dist,
-        p->type
-        );
-    }
-    Log("---------------------------------------\n\n");
+            Log(
+            "%3i (%4.0f, %4.0f, %4.0f) (%4.0f, %4.0f, %4.0f) (%5.0f) %i\n",
+            i,
+            p->normal[1], p->normal[2], p->normal[3],
+            p->origin[1], p->origin[2], p->origin[3],
+            p->dist,
+            p->type
+            );
+        }
+        Log("---------------------------------------\n\n");
 #endif
 
-    // elapsed time
-    end = I_FloatTime();
-    LogTimeElapsed(end - start);
+        // elapsed time
+        end = I_FloatTime();
+        LogTimeElapsed(end - start);
 
-    return 0;
+        CloseLog();
+        CSGCleanup();
+        dtexdata_free();
+        CleanUpGlobals();
+
+        return 0;
+    }
+    catch(int error)
+    {
+        CloseLog();
+        CSGCleanup();
+        dtexdata_free();
+        CleanUpGlobals();
+        return error;
+    }
 }

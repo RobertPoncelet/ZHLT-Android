@@ -1044,7 +1044,7 @@ static void     Usage()
     Log("    mapfile        : The mapfile to compile\n\n");
 
     //exit(1);
-    throw "Fatal exception!";
+    throw 1;
 }
 
 // =====================================================================================

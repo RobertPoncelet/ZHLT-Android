@@ -279,11 +279,13 @@ dleaf_t;
 //
 
 extern int      g_nummodels;
-extern dmodel_t g_dmodels[MAX_MAP_MODELS];
+//extern dmodel_t g_dmodels[MAX_MAP_MODELS];
+extern dmodel_t* g_dmodels;
 extern int      g_dmodels_checksum;
 
 extern int      g_visdatasize;
-extern byte     g_dvisdata[MAX_MAP_VISIBILITY];
+//extern byte     g_dvisdata[MAX_MAP_VISIBILITY];
+extern byte*    g_dvisdata;
 extern int      g_dvisdata_checksum;
 
 extern int      g_lightdatasize;
@@ -295,47 +297,58 @@ extern byte*    g_dtexdata;                                  // (dmiptexlump_t)
 extern int      g_dtexdata_checksum;
 
 extern int      g_entdatasize;
-extern char     g_dentdata[MAX_MAP_ENTSTRING];
+//extern char     g_dentdata[MAX_MAP_ENTSTRING];
+extern char*    g_dentdata;
 extern int      g_dentdata_checksum;
 
 extern int      g_numleafs;
-extern dleaf_t  g_dleafs[MAX_MAP_LEAFS];
+//extern dleaf_t  g_dleafs[MAX_MAP_LEAFS];
+extern dleaf_t*  g_dleafs;
 extern int      g_dleafs_checksum;
 
 extern int      g_numplanes;
-extern dplane_t g_dplanes[MAX_INTERNAL_MAP_PLANES];
+//extern dplane_t g_dplanes[MAX_INTERNAL_MAP_PLANES];
+extern dplane_t* g_dplanes;
 extern int      g_dplanes_checksum;
 
 extern int      g_numvertexes;
-extern dvertex_t g_dvertexes[MAX_MAP_VERTS];
+//extern dvertex_t g_dvertexes[MAX_MAP_VERTS];
+extern dvertex_t* g_dvertexes;
 extern int      g_dvertexes_checksum;
 
 extern int      g_numnodes;
-extern dnode_t  g_dnodes[MAX_MAP_NODES];
+//extern dnode_t  g_dnodes[MAX_MAP_NODES];
+extern dnode_t*  g_dnodes;
 extern int      g_dnodes_checksum;
 
 extern int      g_numtexinfo;
-extern texinfo_t g_texinfo[MAX_MAP_TEXINFO];
+//extern texinfo_t g_texinfo[MAX_MAP_TEXINFO];
+extern texinfo_t* g_texinfo;
 extern int      g_texinfo_checksum;
 
 extern int      g_numfaces;
-extern dface_t  g_dfaces[MAX_MAP_FACES];
+//extern dface_t  g_dfaces[MAX_MAP_FACES];
+extern dface_t*  g_dfaces;
 extern int      g_dfaces_checksum;
 
 extern int      g_numclipnodes;
-extern dclipnode_t g_dclipnodes[MAX_MAP_CLIPNODES];
+//extern dclipnode_t g_dclipnodes[MAX_MAP_CLIPNODES];
+extern dclipnode_t* g_dclipnodes;
 extern int      g_dclipnodes_checksum;
 
 extern int      g_numedges;
-extern dedge_t  g_dedges[MAX_MAP_EDGES];
+//extern dedge_t  g_dedges[MAX_MAP_EDGES];
+extern dedge_t* g_dedges;
 extern int      g_dedges_checksum;
 
 extern int      g_nummarksurfaces;
-extern unsigned short g_dmarksurfaces[MAX_MAP_MARKSURFACES];
+//extern unsigned short g_dmarksurfaces[MAX_MAP_MARKSURFACES];
+extern unsigned short* g_dmarksurfaces;
 extern int      g_dmarksurfaces_checksum;
 
 extern int      g_numsurfedges;
-extern int      g_dsurfedges[MAX_MAP_SURFEDGES];
+//extern int      g_dsurfedges[MAX_MAP_SURFEDGES];
+extern int*     g_dsurfedges;
 extern int      g_dsurfedges_checksum;
 
 extern void     DecompressVis(const byte* src, byte* const dest, const unsigned int dest_length);
@@ -368,7 +381,7 @@ typedef struct
 entity_t;
 
 extern int      g_numentities;
-extern entity_t g_entities[MAX_MAP_ENTITIES];
+extern entity_t* g_entities;
 
 extern void            ParseEntities();
 extern void            UnparseEntities();

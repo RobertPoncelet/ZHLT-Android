@@ -11,11 +11,11 @@ Java_test_zhlt_1android_MainActivity_hlcsgMain(
         jstring filePath) {
     std::string hello = "Hello from C++";
 
-    start_logger("ZHLT");
+    start_logger("ZHLT-Android");
 
     hlcsg_args_t args;
     args.wadConfigName = "";
-    args.brushUnionThreshold = 0.0f;
+    args.brushUnionThreshold = 0.1f;
     args.chart = false;
     args.clipNazi = false;
     args.clipType = 0;
@@ -31,15 +31,15 @@ Java_test_zhlt_1android_MainActivity_hlcsgMain(
     args.onlyEnts = false;
     args.skyClip = false;
     args.threadPriority = 0;
+    args.tinyThreshold = 0.1;
     const char* cpath = (*env).GetStringUTFChars(filePath, 0);
     args.mapName = std::string(cpath);
     (*env).ReleaseStringUTFChars(filePath, cpath);
 
-    try {
-        hlcsg_main(args);
-    }
-    catch (const char* msg) {
-        return env->NewStringUTF(msg);
+    int code = hlcsg_main(args);
+    if (code != 0)
+    {
+        return env->NewStringUTF("Fatal exception!");
     }
 
     return env->NewStringUTF(hello.c_str());

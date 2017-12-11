@@ -13,7 +13,70 @@
 int             g_max_map_miptex = DEFAULT_MAX_MAP_MIPTEX;
 int				g_max_map_lightdata = DEFAULT_MAX_MAP_LIGHTDATA;
 
-int             g_nummodels;
+int      g_nummodels;
+dmodel_t* g_dmodels;
+int      g_dmodels_checksum;
+
+int      g_visdatasize;
+byte*    g_dvisdata;
+int      g_dvisdata_checksum;
+
+int      g_lightdatasize;
+byte*    g_dlightdata;
+int      g_dlightdata_checksum;
+
+int      g_texdatasize;
+byte*    g_dtexdata;                                  // (dmiptexlump_t)
+int      g_dtexdata_checksum;
+
+int      g_entdatasize;
+char*    g_dentdata;
+int      g_dentdata_checksum;
+
+int      g_numleafs;
+dleaf_t*  g_dleafs;
+int      g_dleafs_checksum;
+
+int      g_numplanes;
+dplane_t* g_dplanes;
+int      g_dplanes_checksum;
+
+int      g_numvertexes;
+dvertex_t* g_dvertexes;
+int      g_dvertexes_checksum;
+
+int      g_numnodes;
+dnode_t*  g_dnodes;
+int      g_dnodes_checksum;
+
+int      g_numtexinfo;
+texinfo_t* g_texinfo;
+int      g_texinfo_checksum;
+
+int      g_numfaces;
+dface_t*  g_dfaces;
+int      g_dfaces_checksum;
+
+int      g_numclipnodes;
+dclipnode_t* g_dclipnodes;
+int      g_dclipnodes_checksum;
+
+int      g_numedges;
+dedge_t* g_dedges;
+int      g_dedges_checksum;
+
+int      g_nummarksurfaces;
+unsigned short* g_dmarksurfaces;
+int      g_dmarksurfaces_checksum;
+
+int      g_numsurfedges;
+int*     g_dsurfedges;
+int      g_dsurfedges_checksum;
+
+int             g_numentities;
+entity_t*       g_entities;
+
+/*int             g_nummodels;
 dmodel_t        g_dmodels[MAX_MAP_MODELS];
 int             g_dmodels_checksum;
 
@@ -74,7 +137,7 @@ int             g_dsurfedges[MAX_MAP_SURFEDGES];
 int             g_dsurfedges_checksum;
 
 int             g_numentities;
-entity_t        g_entities[MAX_MAP_ENTITIES];
+entity_t        g_entities[MAX_MAP_ENTITIES];*/
 
 /*
  * ===============

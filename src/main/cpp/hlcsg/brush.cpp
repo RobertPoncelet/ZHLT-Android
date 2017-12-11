@@ -1,6 +1,6 @@
 #include "hlcsg.h"
 
-plane_t         g_mapplanes[MAX_INTERNAL_MAP_PLANES];
+plane_t*        g_mapplanes;
 int             g_nummapplanes;
 
 #define DIST_EPSILON   0.01

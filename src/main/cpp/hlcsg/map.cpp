@@ -3,10 +3,10 @@
 #include "hlcsg.h"
 
 int             g_nummapbrushes;
-brush_t         g_mapbrushes[MAX_MAP_BRUSHES];
+brush_t*        g_mapbrushes;
 
 int             g_numbrushsides;
-side_t          g_brushsides[MAX_MAP_SIDES];
+side_t*         g_brushsides;
 
 int             g_nMapFileVersion;
 

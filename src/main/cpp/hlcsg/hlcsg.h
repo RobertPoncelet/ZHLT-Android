@@ -195,12 +195,13 @@ typedef struct brush_s
 // map.c
 
 extern int      g_nummapbrushes;
-extern brush_t  g_mapbrushes[MAX_MAP_BRUSHES];
+//extern brush_t  g_mapbrushes[MAX_MAP_BRUSHES];
+extern brush_t*  g_mapbrushes;
 
 #define MAX_MAP_SIDES   (MAX_MAP_BRUSHES*6)
 
 extern int      g_numbrushsides;
-extern side_t   g_brushsides[MAX_MAP_SIDES];
+extern side_t*  g_brushsides;
 
 extern void     TextureAxisFromPlane(const plane_t* const pln, vec3_t xv, vec3_t yv);
 extern void     LoadMapFile(const char* const filename);
@@ -260,7 +261,7 @@ extern char*    g_progressfile ;
 extern vec_t    g_tiny_threshold;
 extern vec_t    g_BrushUnionThreshold;
 
-extern plane_t  g_mapplanes[MAX_INTERNAL_MAP_PLANES];
+extern plane_t* g_mapplanes;
 extern int      g_nummapplanes;
 
 extern bface_t* NewFaceFromFace(const bface_t* const in);
@@ -339,4 +340,6 @@ extern std::set<std::string> g_invisible_items;
 #endif
 
 //============================================================================
+
+extern void CSGCleanup();
 #endif//HLCSG_H__
