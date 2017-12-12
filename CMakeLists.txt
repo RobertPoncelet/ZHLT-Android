@@ -76,6 +76,7 @@ set_target_properties(hlvis PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINI
 
 set_target_properties(native-lib PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
 target_link_libraries(native-lib hlcsg)
+target_link_libraries(native-lib hlbsp)
 
 target_link_libraries(hlcsg ${log-lib})
 target_link_libraries(hlbsp ${log-lib})

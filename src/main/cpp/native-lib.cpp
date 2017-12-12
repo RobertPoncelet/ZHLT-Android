@@ -3,6 +3,8 @@
 #include "hlcsg/hlcsg.h"
 #include "common/log.h"
 
+extern int             hlbsp_main(const char* map);
+
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_test_zhlt_1android_MainActivity_hlcsgMain(
@@ -39,7 +41,13 @@ Java_test_zhlt_1android_MainActivity_hlcsgMain(
     int code = hlcsg_main(args);
     if (code != 0)
     {
-        return env->NewStringUTF("Fatal exception!");
+        return env->NewStringUTF("Fatal exception in HLCSG!");
+    }
+
+    code = hlbsp_main(args.mapName.c_str());
+    if (code != 0)
+    {
+        return env->NewStringUTF("Fatal exception in HLBSP!");
     }
 
     return env->NewStringUTF(hello.c_str());

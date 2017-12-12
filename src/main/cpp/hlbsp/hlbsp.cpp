@@ -1163,10 +1163,97 @@ static void     ProcessFile(const char* const filename)
     FinishBSPFile();
 }
 
+void InitGlobals()
+{
+    g_dmodels =         new dmodel_t        [MAX_MAP_MODELS]();
+    g_dvisdata =        new byte            [MAX_MAP_VISIBILITY]();
+    g_dentdata =        new char            [MAX_MAP_ENTSTRING]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dplanes =         new dplane_t        [MAX_INTERNAL_MAP_PLANES]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dvertexes =       new dvertex_t       [MAX_MAP_VERTS]();
+    g_dnodes =          new dnode_t         [MAX_MAP_NODES]();
+    g_texinfo =         new texinfo_t       [MAX_MAP_TEXINFO]();
+    g_dfaces =          new dface_t         [MAX_MAP_FACES]();
+    g_dclipnodes =      new dclipnode_t     [MAX_MAP_CLIPNODES]();
+    g_dedges =          new dedge_t         [MAX_MAP_EDGES]();
+    g_dmarksurfaces =   new unsigned short  [MAX_MAP_MARKSURFACES]();
+    g_dsurfedges =      new int             [MAX_MAP_SURFEDGES]();
+    g_entities =        new entity_t        [MAX_MAP_ENTITIES]();
+
+    //g_mapbrushes =      new brush_t         [MAX_MAP_BRUSHES]();
+    //g_brushsides =      new side_t          [MAX_MAP_SIDES]();
+    //g_mapplanes =       new plane_t         [MAX_MAP_PLANES]();
+}
+
+// =====================================================================================
+//  CleanUpGlobals()
+//           _---_______
+//          / ///      _|  delet this
+//         /    _______|
+//        /    /(/
+//       /____/
+// =====================================================================================
+void            CleanUpGlobals()
+{
+    // Map stuff
+
+    g_numclipnodes = 0;
+    delete[] g_dclipnodes;
+
+    g_numedges = 0;
+    delete[] g_dedges;
+
+    g_numentities = 0;
+    delete[] g_entities;
+
+    g_numfaces = 0;
+    delete[] g_dfaces;
+
+    g_numleafs = 0;
+    delete[] g_dleafs;
+
+    g_nummarksurfaces = 0;
+    delete[] g_dmarksurfaces;
+
+    g_nummodels = 0;
+    delete[] g_dmodels;
+
+    g_numnodes = 0;
+    delete[] g_dnodes;
+
+    g_numplanes = 0;
+    delete[] g_dplanes;
+
+    g_numsurfedges = 0;
+    delete[] g_dsurfedges;
+
+    g_numtexinfo = 0;
+    delete[] g_texinfo;
+
+    g_numvertexes = 0;
+    delete[] g_dvertexes;
+
+    g_visdatasize = 0;
+    delete[] g_dvisdata;
+
+    // Logs
+
+    g_Program = "Uninitialized variable ::g_Program";
+    memset(g_Mapname, 0, sizeof(char) * _MAX_PATH);
+
+    g_developer = DEFAULT_DEVELOPER;
+    g_verbose = DEFAULT_VERBOSE;
+    g_log = DEFAULT_LOG;
+
+    g_clientid = 0;
+    g_nextclientid = 0;
+}
+
 // =====================================================================================
 //  main
 // =====================================================================================
-int             hlbsp_main(const int argc, char** argv)
+int             hlbsp_main(const char* map)
 {
     int             i;
     double          start, end;
@@ -1175,7 +1262,7 @@ int             hlbsp_main(const int argc, char** argv)
     g_Program = "hlbsp";
 
     // if we dont have any command line argvars, print out usage and die
-    if (argc == 1)
+    /*if (argc == 1)
         Usage();
 
     // check command line args
@@ -1407,7 +1494,9 @@ int             hlbsp_main(const int argc, char** argv)
             Log("Unknown option \"%s\"\n", argv[i]);
             Usage();
         }
-    }
+    }*/
+
+    mapname_from_arg = map;
 
     if (!mapname_from_arg)
     {
@@ -1422,9 +1511,11 @@ int             hlbsp_main(const int argc, char** argv)
     atexit(CloseLog);
     ThreadSetDefault();
     ThreadSetPriority(g_threadpriority);
-    LogStart(argc, argv);
+    //LogStart(argc, argv);
 
     CheckForErrorLog();
+
+    InitGlobals();
 
     dtexdata_init();
     atexit(dtexdata_free);
@@ -1449,7 +1540,7 @@ int             hlbsp_main(const int argc, char** argv)
 #ifdef SYSTEM_WIN32
             GetModuleFileName(NULL, tmp, _MAX_PATH);
 #else
-            safe_strncpy(tmp, argv[0], _MAX_PATH);
+            safe_strncpy(tmp, map, _MAX_PATH);
 #endif
             ExtractFilePath(tmp, strSystemEntitiesVoidFile);
             safe_strncat(strSystemEntitiesVoidFile, ENTITIES_VOID, _MAX_PATH);
@@ -1477,5 +1568,6 @@ int             hlbsp_main(const int argc, char** argv)
 
     FreeAllowableOutsideList();
 
+    CleanUpGlobals();
     return 0;
 }
