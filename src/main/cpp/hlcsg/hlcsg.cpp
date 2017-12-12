@@ -1374,6 +1374,8 @@ void InitGlobals()
 // =====================================================================================
 void            CleanUpGlobals()
 {
+    // Map stuff
+
     g_nummapbrushes = 0;
     delete[] g_mapbrushes;
 
@@ -1426,8 +1428,25 @@ void            CleanUpGlobals()
 
     g_iNumWadPaths = 0;
 
-    g_WadInclude.clear();
     g_invisible_items.clear();
+
+    memset(wadconfigname, 0, sizeof(char) * MAX_WAD_CFG_NAME);
+
+    // Textures
+
+    ResetTextures();
+
+    // Logs
+
+    g_Program = "Uninitialized variable ::g_Program";
+    memset(g_Mapname, 0, sizeof(char) * _MAX_PATH);
+
+    g_developer = DEFAULT_DEVELOPER;
+    g_verbose = DEFAULT_VERBOSE;
+    g_log = DEFAULT_LOG;
+
+    g_clientid = 0;
+    g_nextclientid = 0;
 }
 
 // =====================================================================================

@@ -215,6 +215,8 @@ extern std::deque< std::string > g_WadInclude;  // List of substrings to wadincl
 extern void     WriteMiptex();
 extern int      TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin);
 
+extern void ResetTextures();
+
 //=============================================================================
 // brush.c
 

@@ -77,6 +77,22 @@ static FILE*    texfiles[MAX_TEXFILES];
     #define texmap64_retrieve( A ) ( (char*) A)
 #endif // SIZEOF_CHARP
 
+void ResetTextures()
+{
+    g_WadInclude.clear();
+    s_WadIncludeMap.clear();
+
+    nummiptex = 0;
+    memset(miptex, 0, sizeof(lumpinfo_t) * MAX_MAP_TEXTURES);
+
+    nTexLumps = 0;
+    lumpinfo = NULL;
+
+    nTexFiles = 0;
+    memset(texfiles, 0, sizeof(FILE*) * MAX_TEXFILES);
+    static FILE*    texfiles[MAX_TEXFILES];
+}
+
 // =====================================================================================
 //  CleanupName
 // =====================================================================================
