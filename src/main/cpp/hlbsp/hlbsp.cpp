@@ -13,7 +13,7 @@
 #include <windows.h>
 #endif
 
-#include "bsp5.h"
+#include "hlbsp.h"
 
 /*
 
@@ -1166,7 +1166,7 @@ static void     ProcessFile(const char* const filename)
 // =====================================================================================
 //  main
 // =====================================================================================
-int             main(const int argc, char** argv)
+int             hlbsp_main(const int argc, char** argv)
 {
     int             i;
     double          start, end;

@@ -1,4 +1,4 @@
-#include "bsp5.h"
+#include "hlbsp.h"
 
 typedef struct wvert_s
 {
