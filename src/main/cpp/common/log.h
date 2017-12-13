@@ -70,7 +70,7 @@ extern void CDECL Warning(const char* const warning, ...);
 
 extern void CDECL PrintOnce(const char* const message, ...);
 
-extern void     LogStart(const int argc, char** argv);
+extern void     LogStart(/*const int argc, char** argv*/);
 extern void     LogEnd();
 extern void     Banner();
 

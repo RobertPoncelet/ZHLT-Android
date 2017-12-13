@@ -1634,7 +1634,7 @@ int             main(const int argc, char** argv)
     atexit(CloseLog);
     ThreadSetDefault();
     ThreadSetPriority(g_threadpriority);
-    LogStart(argc, argv);
+    LogStart(/*argc, argv*/);
 
 #ifdef ZHLT_NETVIS
     if (g_vismode == VIS_MODE_CLIENT)

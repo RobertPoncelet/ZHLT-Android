@@ -571,11 +571,11 @@ void            Banner()
 // =====================================================================================
 //  LogStart
 // =====================================================================================
-void            LogStart(int argc, char** argv)
+void            LogStart(/*int argc, char** argv*/)
 {
     Banner();
     Log("-----  BEGIN  %s -----\n", g_Program);
-    LogArgs(argc, argv);
+    //LogArgs(argc, argv);
     DisplayDeveloperLevel();
 }
 

@@ -10,7 +10,8 @@
     
 */
 
-#include "hlcsg.h" 
+#include "hlcsg.h"
+#include "hlcsg_interface.h"
 
 /*
 
@@ -1597,7 +1598,7 @@ int             hlcsg_main(hlcsg_args_t args) {
         ResetLog();
         OpenLog(g_clientid);
         //atexit(CloseLog);
-        //LogStart(argc, argv); // TODO: logs
+        LogStart(/*argc, argv*/); // TODO: logs
         //atexit(CSGCleanup); // AJM
         dtexdata_init();
         InitGlobals();

@@ -1,9 +1,9 @@
 #include <jni.h>
 #include <string>
-#include "hlcsg/hlcsg.h"
+#include "win32fix.h"
 #include "common/log.h"
-
-extern int             hlbsp_main(const char* map);
+#include "hlcsg/hlcsg_interface.h"
+#include "hlbsp/hlbsp_interface.h"
 
 extern "C"
 JNIEXPORT jstring JNICALL

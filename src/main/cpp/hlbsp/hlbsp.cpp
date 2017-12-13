@@ -14,6 +14,7 @@
 #endif
 
 #include "hlbsp.h"
+#include "hlbsp_interface.h"
 
 /*
 
@@ -1253,321 +1254,329 @@ void            CleanUpGlobals()
 // =====================================================================================
 //  main
 // =====================================================================================
-int             hlbsp_main(const char* map)
-{
-    int             i;
-    double          start, end;
-    const char*     mapname_from_arg = NULL;
-
-    g_Program = "hlbsp";
-
-    // if we dont have any command line argvars, print out usage and die
-    /*if (argc == 1)
-        Usage();
-
-    // check command line args
-    for (i = 1; i < argc; i++)
+int             hlbsp_main(const char* map) {
+    try
     {
-        if (!strcasecmp(argv[i], "-threads"))
-        {
-            if (i < argc)
-            {
-                int             g_numthreads = atoi(argv[++i]);
+        int i;
+        double start, end;
+        const char *mapname_from_arg = NULL;
 
-                if (g_numthreads < 1)
+        g_Program = "hlbsp";
+
+        // if we dont have any command line argvars, print out usage and die
+        /*if (argc == 1)
+            Usage();
+
+        // check command line args
+        for (i = 1; i < argc; i++)
+        {
+            if (!strcasecmp(argv[i], "-threads"))
+            {
+                if (i < argc)
                 {
-                    Log("Expected value of at least 1 for '-threads'\n");
+                    int             g_numthreads = atoi(argv[++i]);
+
+                    if (g_numthreads < 1)
+                    {
+                        Log("Expected value of at least 1 for '-threads'\n");
+                        Usage();
+                    }
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-notjunc"))
             {
-                Usage();
+                g_notjunc = true;
             }
-        }
-        else if (!strcasecmp(argv[i], "-notjunc"))
-        {
-            g_notjunc = true;
-        }
-        else if (!strcasecmp(argv[i], "-noclip"))
-        {
-            g_noclip = true;
-        }
-        else if (!strcasecmp(argv[i], "-nofill"))
-        {
-            g_nofill = true;
-        }
+            else if (!strcasecmp(argv[i], "-noclip"))
+            {
+                g_noclip = true;
+            }
+            else if (!strcasecmp(argv[i], "-nofill"))
+            {
+                g_nofill = true;
+            }
 
 #ifdef SYSTEM_WIN32
-        else if (!strcasecmp(argv[i], "-estimate"))
-        {
-            g_estimate = true;
-        }
+            else if (!strcasecmp(argv[i], "-estimate"))
+            {
+                g_estimate = true;
+            }
 #endif
 
 #ifdef SYSTEM_POSIX
-        else if (!strcasecmp(argv[i], "-noestimate"))
-        {
-            g_estimate = false;
-        }
+            else if (!strcasecmp(argv[i], "-noestimate"))
+            {
+                g_estimate = false;
+            }
 #endif
 
 #ifdef ZHLT_NETVIS
-        else if (!strcasecmp(argv[i], "-client"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-client"))
             {
-                g_clientid = atoi(argv[++i]);
+                if (i < argc)
+                {
+                    g_clientid = atoi(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
             }
-            else
-            {
-                Usage();
-            }
-        }
 #endif
 
 #ifdef ZHLT_PROGRESSFILE // AJM
-        else if (!strcasecmp(argv[i], "-progressfile"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-progressfile"))
             {
-                g_progressfile = argv[++i];
+                if (i < argc)
+                {
+                    g_progressfile = argv[++i];
+                }
+                else
+                {
+                    Log("Error: -progressfile: expected path to progress file following parameter\n");
+                    Usage();
+                }
             }
-            else
-            {
-            	Log("Error: -progressfile: expected path to progress file following parameter\n");
-                Usage();
-            }
-        }
 #endif
 
-        else if (!strcasecmp(argv[i], "-dev"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-dev"))
             {
-                g_developer = (developer_level_t)atoi(argv[++i]);
+                if (i < argc)
+                {
+                    g_developer = (developer_level_t)atoi(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
             }
-            else
+            else if (!strcasecmp(argv[i], "-verbose"))
             {
-                Usage();
+                g_verbose = true;
             }
-        }
-        else if (!strcasecmp(argv[i], "-verbose"))
-        {
-            g_verbose = true;
-        }
-        else if (!strcasecmp(argv[i], "-noinfo"))
-        {
-            g_info = false;
-        }
-        else if (!strcasecmp(argv[i], "-leakonly"))
-        {
-            g_bLeakOnly = true;
-        }
-        else if (!strcasecmp(argv[i], "-chart"))
-        {
-            g_chart = true;
-        }
-        else if (!strcasecmp(argv[i], "-low"))
-        {
-            g_threadpriority = eThreadPriorityLow;
-        }
-        else if (!strcasecmp(argv[i], "-high"))
-        {
-            g_threadpriority = eThreadPriorityHigh;
-        }
-        else if (!strcasecmp(argv[i], "-nolog"))
-        {
-            g_log = false;
-        }
+            else if (!strcasecmp(argv[i], "-noinfo"))
+            {
+                g_info = false;
+            }
+            else if (!strcasecmp(argv[i], "-leakonly"))
+            {
+                g_bLeakOnly = true;
+            }
+            else if (!strcasecmp(argv[i], "-chart"))
+            {
+                g_chart = true;
+            }
+            else if (!strcasecmp(argv[i], "-low"))
+            {
+                g_threadpriority = eThreadPriorityLow;
+            }
+            else if (!strcasecmp(argv[i], "-high"))
+            {
+                g_threadpriority = eThreadPriorityHigh;
+            }
+            else if (!strcasecmp(argv[i], "-nolog"))
+            {
+                g_log = false;
+            }
 
 #ifdef ZHLT_NULLTEX // AJM
-        else if (!strcasecmp(argv[i], "-nonulltex"))
-        {
-            g_bUseNullTex = false;
-        }
+            else if (!strcasecmp(argv[i], "-nonulltex"))
+            {
+                g_bUseNullTex = false;
+            }
 #endif
 
 #ifdef ZHLT_DETAIL // AJM
-        else if (!strcasecmp(argv[i], "-nodetail"))
-        {
-            g_bDetailBrushes = false;
-        }
+            else if (!strcasecmp(argv[i], "-nodetail"))
+            {
+                g_bDetailBrushes = false;
+            }
 #endif
-		else if (!strcasecmp(argv[i], "-noopt"))
-		{
-			g_noopt = true;
-		}
-        else if (!strcasecmp(argv[i], "-subdivide"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-noopt"))
             {
-                g_subdivide_size = atoi(argv[++i]);
-                if (g_subdivide_size > MAX_SUBDIVIDE_SIZE)
-                {
-                    Warning
-                        ("Maximum value for subdivide size is %i, '-subdivide %i' ignored",
-                         MAX_SUBDIVIDE_SIZE, g_subdivide_size);
-                    g_subdivide_size = MAX_SUBDIVIDE_SIZE;
-                }
-                else if (g_subdivide_size < MIN_SUBDIVIDE_SIZE)
-                {
-                    Warning
-                        ("Mininum value for subdivide size is %i, '-subdivide %i' ignored",
-                         MIN_SUBDIVIDE_SIZE, g_subdivide_size);
-                    g_subdivide_size = MAX_SUBDIVIDE_SIZE;
-                }
+                g_noopt = true;
             }
-            else
+            else if (!strcasecmp(argv[i], "-subdivide"))
             {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-maxnodesize"))
-        {
-            if (i < argc)
-            {
-                g_maxnode_size = atoi(argv[++i]);
-                if (g_maxnode_size > MAX_MAXNODE_SIZE)
+                if (i < argc)
                 {
-                    Warning
-                        ("Maximum value for max node size is %i, '-maxnodesize %i' ignored",
-                         MAX_MAXNODE_SIZE, g_maxnode_size);
-                    g_maxnode_size = MAX_MAXNODE_SIZE;
+                    g_subdivide_size = atoi(argv[++i]);
+                    if (g_subdivide_size > MAX_SUBDIVIDE_SIZE)
+                    {
+                        Warning
+                            ("Maximum value for subdivide size is %i, '-subdivide %i' ignored",
+                             MAX_SUBDIVIDE_SIZE, g_subdivide_size);
+                        g_subdivide_size = MAX_SUBDIVIDE_SIZE;
+                    }
+                    else if (g_subdivide_size < MIN_SUBDIVIDE_SIZE)
+                    {
+                        Warning
+                            ("Mininum value for subdivide size is %i, '-subdivide %i' ignored",
+                             MIN_SUBDIVIDE_SIZE, g_subdivide_size);
+                        g_subdivide_size = MAX_SUBDIVIDE_SIZE;
+                    }
                 }
-                else if (g_maxnode_size < MIN_MAXNODE_SIZE)
+                else
                 {
-                    Warning
-                        ("Mininimum value for max node size is %i, '-maxnodesize %i' ignored",
-                         MIN_MAXNODE_SIZE, g_maxnode_size);
-                    g_maxnode_size = MAX_MAXNODE_SIZE;
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-maxnodesize"))
             {
-                Usage();
+                if (i < argc)
+                {
+                    g_maxnode_size = atoi(argv[++i]);
+                    if (g_maxnode_size > MAX_MAXNODE_SIZE)
+                    {
+                        Warning
+                            ("Maximum value for max node size is %i, '-maxnodesize %i' ignored",
+                             MAX_MAXNODE_SIZE, g_maxnode_size);
+                        g_maxnode_size = MAX_MAXNODE_SIZE;
+                    }
+                    else if (g_maxnode_size < MIN_MAXNODE_SIZE)
+                    {
+                        Warning
+                            ("Mininimum value for max node size is %i, '-maxnodesize %i' ignored",
+                             MIN_MAXNODE_SIZE, g_maxnode_size);
+                        g_maxnode_size = MAX_MAXNODE_SIZE;
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
             }
-        }
-        else if (!strcasecmp(argv[i], "-texdata"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-texdata"))
             {
-                int             x = atoi(argv[++i]) * 1024;
+                if (i < argc)
+                {
+                    int             x = atoi(argv[++i]) * 1024;
 
-                if (x > g_max_map_miptex)
+                    if (x > g_max_map_miptex)
+                    {
+                        g_max_map_miptex = x;
+                    }
+                }
+                else
                 {
-                    g_max_map_miptex = x;
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-lightdata"))
             {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-lightdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
+                if (i < argc)
+                {
+                    int             x = atoi(argv[++i]) * 1024;
 
-                if (x > g_max_map_lightdata)
-                {
-                    g_max_map_lightdata = x;
+                    if (x > g_max_map_lightdata)
+                    {
+                        g_max_map_lightdata = x;
+                    }
                 }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (argv[i][0] == '-')
+            {
+                Log("Unknown option \"%s\"\n", argv[i]);
+                Usage();
+            }
+            else if (!mapname_from_arg)
+            {
+                mapname_from_arg = argv[i];
             }
             else
             {
+                Log("Unknown option \"%s\"\n", argv[i]);
                 Usage();
             }
-        }
-        else if (argv[i][0] == '-')
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
+        }*/
+
+        mapname_from_arg = map;
+
+        if (!mapname_from_arg) {
+            Log("No mapfile specified\n");
             Usage();
         }
-        else if (!mapname_from_arg)
-        {
-            mapname_from_arg = argv[i];
-        }
-        else
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
-            Usage();
-        }
-    }*/
 
-    mapname_from_arg = map;
+        safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
+        FlipSlashes(g_Mapname);
+        StripExtension(g_Mapname);
+        OpenLog(g_clientid);
+        //atexit(CloseLog);
+        ThreadSetDefault();
+        ThreadSetPriority(g_threadpriority);
+        LogStart(/*argc, argv*/);
 
-    if (!mapname_from_arg)
-    {
-        Log("No mapfile specified\n");
-        Usage();
+        CheckForErrorLog();
+
+        InitGlobals();
+
+        dtexdata_init();
+        //atexit(dtexdata_free);
+        //Settings();
+        // END INIT
+
+        // Load the .void files for allowable entities in the void
+        {
+            char g_source[_MAX_PATH];
+            char strSystemEntitiesVoidFile[_MAX_PATH];
+            char strMapEntitiesVoidFile[_MAX_PATH];
+
+            safe_strncpy(g_source, mapname_from_arg, _MAX_PATH);
+            StripExtension(g_source);
+
+            // try looking in the current directory
+            safe_strncpy(strSystemEntitiesVoidFile, ENTITIES_VOID, _MAX_PATH);
+            if (!q_exists(strSystemEntitiesVoidFile)) {
+                char tmp[_MAX_PATH];
+                // try looking in the directory we were run from
+    #ifdef SYSTEM_WIN32
+                GetModuleFileName(NULL, tmp, _MAX_PATH);
+    #else
+                safe_strncpy(tmp, map, _MAX_PATH);
+    #endif
+                ExtractFilePath(tmp, strSystemEntitiesVoidFile);
+                safe_strncat(strSystemEntitiesVoidFile, ENTITIES_VOID, _MAX_PATH);
+            }
+
+            // Set the optional level specific lights filename
+            safe_strncpy(strMapEntitiesVoidFile, g_source, _MAX_PATH);
+            DefaultExtension(strMapEntitiesVoidFile, ENTITIES_VOID_EXT);
+
+            LoadAllowableOutsideList(strSystemEntitiesVoidFile);    // default entities.void
+            if (*strMapEntitiesVoidFile) {
+                LoadAllowableOutsideList(strMapEntitiesVoidFile);   // automatic mapname.void
+            }
+        }
+
+        // BEGIN BSP
+        start = I_FloatTime();
+
+        ProcessFile(g_Mapname);
+
+        end = I_FloatTime();
+        LogTimeElapsed(end - start);
+        // END BSP
+
+        CloseLog();
+        dtexdata_free();
+        FreeAllowableOutsideList();
+        CleanUpGlobals();
+        return 0;
     }
-
-    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
-    FlipSlashes(g_Mapname);
-    StripExtension(g_Mapname);
-    OpenLog(g_clientid);
-    atexit(CloseLog);
-    ThreadSetDefault();
-    ThreadSetPriority(g_threadpriority);
-    //LogStart(argc, argv);
-
-    CheckForErrorLog();
-
-    InitGlobals();
-
-    dtexdata_init();
-    atexit(dtexdata_free);
-    //Settings();
-    // END INIT
-
-    // Load the .void files for allowable entities in the void
+    catch(int error)
     {
-        char            g_source[_MAX_PATH];
-        char            strSystemEntitiesVoidFile[_MAX_PATH];
-        char            strMapEntitiesVoidFile[_MAX_PATH];
-
-        safe_strncpy(g_source, mapname_from_arg, _MAX_PATH);
-        StripExtension(g_source);
-
-        // try looking in the current directory
-        safe_strncpy(strSystemEntitiesVoidFile, ENTITIES_VOID, _MAX_PATH);
-        if (!q_exists(strSystemEntitiesVoidFile))
-        {
-            char tmp[_MAX_PATH];
-            // try looking in the directory we were run from
-#ifdef SYSTEM_WIN32
-            GetModuleFileName(NULL, tmp, _MAX_PATH);
-#else
-            safe_strncpy(tmp, map, _MAX_PATH);
-#endif
-            ExtractFilePath(tmp, strSystemEntitiesVoidFile);
-            safe_strncat(strSystemEntitiesVoidFile, ENTITIES_VOID, _MAX_PATH);
-        }
-
-        // Set the optional level specific lights filename
-        safe_strncpy(strMapEntitiesVoidFile, g_source, _MAX_PATH);
-        DefaultExtension(strMapEntitiesVoidFile, ENTITIES_VOID_EXT);
-
-        LoadAllowableOutsideList(strSystemEntitiesVoidFile);    // default entities.void
-        if (*strMapEntitiesVoidFile)
-        {
-            LoadAllowableOutsideList(strMapEntitiesVoidFile);   // automatic mapname.void
-        }
+        CloseLog();
+        dtexdata_free();
+        FreeAllowableOutsideList();
+        CleanUpGlobals();
+        return error;
     }
-
-    // BEGIN BSP
-    start = I_FloatTime();
-
-    ProcessFile(g_Mapname);
-
-    end = I_FloatTime();
-    LogTimeElapsed(end - start);
-    // END BSP
-
-    FreeAllowableOutsideList();
-
-    CleanUpGlobals();
-    return 0;
 }

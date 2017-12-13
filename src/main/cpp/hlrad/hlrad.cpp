@@ -2941,7 +2941,7 @@ int             main(const int argc, char** argv)
     atexit(CloseLog);
     ThreadSetDefault();
     ThreadSetPriority(g_threadpriority);
-    LogStart(argc, argv);
+    LogStart(/*argc, argv*/);
 
     CheckForErrorLog();
 
