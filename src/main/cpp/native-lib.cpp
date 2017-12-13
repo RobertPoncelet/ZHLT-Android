@@ -11,7 +11,7 @@ Java_test_zhlt_1android_MainActivity_hlcsgMain(
         JNIEnv *env,
         jobject /* this */,
         jstring filePath) {
-    std::string hello = "Hello from C++";
+    std::string hello = "Fix me";
 
     start_logger("ZHLT-Android");
 
