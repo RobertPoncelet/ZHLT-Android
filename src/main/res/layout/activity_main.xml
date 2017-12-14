@@ -26,14 +26,30 @@
                 android:layout_weight="1"
                 android:text="Select Map" />
 
-            <EditText
-                android:id="@+id/mapPath"
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ems="10"
-                android:inputType="textPersonName"
-                android:text="test.map" />
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:fillViewport="true"
+                android:padding="4dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/mapPath"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="*.map"
+                        android:textAlignment="viewStart"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
+                </LinearLayout>
+            </HorizontalScrollView>
 
         </LinearLayout>
 

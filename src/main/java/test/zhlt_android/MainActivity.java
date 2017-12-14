@@ -14,14 +14,21 @@ import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 public class MainActivity extends Activity {
 
     public static final int PICK_FILE = 1;
     public static final String TAG = "ZHLT-Android";
+
+    private Uri mapUri = null;
+    private String localMapPath = "<ERROR>";
+    private String mapName = "<ERROR>";
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -33,28 +40,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        Log.d("ZHLT-Android", "==================== STARTED ====================");
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            //File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-            tv.setText(hlcsgMain(getFilesDir().getPath() + "/test.map"));
-        } else {
-            tv.setText("External storage unavailable");
-        }
-
-        TextView log = (TextView) findViewById(R.id.log);
-        String logString;
-        try {
-            logString = getStringFromFile(getFilesDir().getPath() + "/test.log");
-            log.setText(logString);
-        } catch (Exception e) {
-            log.setText("Could not find log file " + getFilesDir().getPath() + "/test.log");
-            e.printStackTrace();
-        }
-
-        final Button button = findViewById(R.id.mapButton);
-        button.setOnClickListener(new View.OnClickListener() {
+        final Button mapButton = findViewById(R.id.mapButton);
+        mapButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
@@ -62,23 +49,75 @@ public class MainActivity extends Activity {
             }
         });
 
+        final Button compileButton = findViewById(R.id.compileButton);
+        compileButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Compile
+                TextView tv = (TextView) findViewById(R.id.sample_text);
+                Log.d("ZHLT-Android", "==================== STARTED ====================");
+                tv.setText(hlcsgMain(localMapPath));
+
+                if (!tv.getText().equals("Fix me")) {
+                    return;
+                }
+
+                // Log
+                TextView log = (TextView) findViewById(R.id.log);
+                String logString;
+                String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
+                try {
+                    logString = getStringFromFile(logPath);
+                    log.setText(logString);
+                } catch (Exception e) {
+                    log.setText("Could not open log file " + logPath);
+                    e.printStackTrace();
+                }
+
+                // Copy resulting BSP
+                try {
+                    if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                        String localBspPath = getFilesDir().getPath() + File.separator + mapName + ".bsp";
+                        File localBsp = new File(localBspPath);
+
+                        File storage = getExternalFilesDir(null);
+                        String bspPath = storage.getPath() + File.separator + mapName + ".bsp";
+
+                        tv.setText(bspPath);
+                        createFileFromInputStream(new FileInputStream(localBsp), bspPath);
+                    } else {
+                        tv.setText("External storage unavailable");
+                    }
+                } catch (IOException e) {
+                    tv.setText(e.toString());
+                }
+            }
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // We just received the user-selected map file from the browser
+        // Now copy it to the local directory
+        if (requestCode == PICK_FILE && resultCode == RESULT_OK) {
+            mapUri = data.getData();
+            TextView mapPathView = findViewById(R.id.mapPath);
+            mapPathView.setText(mapUri.getPath());
 
-        if (requestCode == PICK_FILE) {
-            if (resultCode == RESULT_OK) {
-                // User pick the file
-                Uri uri = data.getData();
-                File file = new File(uri.getPath());
-                String filePath = file.getPath();
-                EditText mapPathView = findViewById(R.id.mapPath);
-                mapPathView.setText(filePath);
-                //Toast.makeText(this, fileContent, Toast.LENGTH_LONG).show();
-            } else {
-                //Log.i(TAG, data.toString());
+            File in = new File(mapUri.getPath());
+            String[] strings = in.getName().split(":");
+            String fileName = strings[strings.length-1];
+            String filePath = getFilesDir().getPath() + File.separator + fileName;
+
+            strings = fileName.split("\\.");
+            mapName = strings[strings.length-2];
+
+            try {
+                InputStream inStream = getContentResolver().openInputStream(mapUri);
+                createFileFromInputStream(inStream, filePath);
+                localMapPath = filePath;
+            } catch (IOException e) {
+                mapPathView.setText(e.toString());
             }
         }
     }
@@ -101,6 +140,39 @@ public class MainActivity extends Activity {
         //Make sure you close all streams.
         fin.close();
         return ret;
+    }
+
+    public void copy(File src, File dst) throws IOException {
+        FileInputStream inStream = new FileInputStream(src);
+        FileOutputStream outStream = new FileOutputStream(dst);
+        FileChannel inChannel = inStream.getChannel();
+        FileChannel outChannel = outStream.getChannel();
+        inChannel.transferTo(0, inChannel.size(), outChannel);
+        inStream.close();
+        outStream.close();
+    }
+
+
+    private static File createFileFromInputStream(InputStream inputStream, String fileName) {
+        try{
+            File f = new File(fileName);
+            f.setWritable(true, false);
+            OutputStream outputStream = new FileOutputStream(f);
+            byte buffer[] = new byte[1024];
+            int length;
+
+            while((length=inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer,0,length);
+            }
+
+            outputStream.close();
+            inputStream.close();
+
+            return f;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public native String hlcsgMain(String filePath);
