@@ -4,9 +4,10 @@
 #include "common/log.h"
 #include "hlcsg/hlcsg_interface.h"
 #include "hlbsp/hlbsp_interface.h"
+#include "hlvis/hlvis_interface.h"
 
 extern "C"
-JNIEXPORT jstring JNICALL
+JNIEXPORT jint JNICALL
 Java_test_zhlt_1android_MainActivity_hlcsgMain(
         JNIEnv *env,
         jobject /* this */,
@@ -38,17 +39,33 @@ Java_test_zhlt_1android_MainActivity_hlcsgMain(
     args.mapName = std::string(cpath);
     (*env).ReleaseStringUTFChars(filePath, cpath);
 
-    int code = hlcsg_main(args);
-    if (code != 0)
-    {
-        return env->NewStringUTF("Fatal exception in HLCSG!");
-    }
+    return (jint)hlcsg_main(args);
+}
 
-    code = hlbsp_main(args.mapName.c_str());
-    if (code != 0)
-    {
-        return env->NewStringUTF("Fatal exception in HLBSP!");
-    }
+extern "C"
+JNIEXPORT jint JNICALL
+Java_test_zhlt_1android_MainActivity_hlbspMain(
+        JNIEnv *env,
+        jobject /* this */,
+        jstring filePath) {
 
-    return env->NewStringUTF(hello.c_str());
+    const char* cpath = (*env).GetStringUTFChars(filePath, 0);
+    jint result = (jint)hlbsp_main(cpath);
+    (*env).ReleaseStringUTFChars(filePath, cpath);
+
+    return result;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_test_zhlt_1android_MainActivity_hlvisMain(
+        JNIEnv *env,
+        jobject /* this */,
+        jstring filePath) {
+
+    const char* cpath = (*env).GetStringUTFChars(filePath, 0);
+    jint result = (jint)hlvis_main(cpath);
+    (*env).ReleaseStringUTFChars(filePath, cpath);
+
+    return result;
 }

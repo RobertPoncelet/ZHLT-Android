@@ -55,14 +55,17 @@ public class MainActivity extends Activity {
                 // Compile
                 TextView tv = (TextView) findViewById(R.id.sample_text);
                 Log.d("ZHLT-Android", "==================== STARTED ====================");
-                tv.setText(hlcsgMain(localMapPath));
 
-                if (!tv.getText().equals("Fix me")) {
-                    return;
+                int code = hlcsgMain(localMapPath);
+                if (code == 0) {
+                    code = hlbspMain(localMapPath);
+                }
+                if (code == 0) {
+                    code = hlvisMain(localMapPath);
                 }
 
                 // Log
-                TextView log = (TextView) findViewById(R.id.log);
+                TextView log = findViewById(R.id.log);
                 String logString;
                 String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
                 try {
@@ -125,7 +128,7 @@ public class MainActivity extends Activity {
     public static String convertStreamToString(InputStream is) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
-        String line = null;
+        String line;
         while ((line = reader.readLine()) != null) {
             sb.append(line).append("\n");
         }
@@ -175,5 +178,7 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    public native String hlcsgMain(String filePath);
+    public native int hlcsgMain(String filePath);
+    public native int hlbspMain(String filePath);
+    public native int hlvisMain(String filePath);
 }
