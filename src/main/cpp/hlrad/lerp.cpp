@@ -1,6 +1,6 @@
 #pragma warning(disable: 4018) //amckern - 64bit - '<' Singed/Unsigned Mismatch
 
-#include "qrad.h"
+#include "hlrad.h"
 #include "mathutil_temp.h"
 
 int             g_lerp_enabled = DEFAULT_LERP_ENABLED;

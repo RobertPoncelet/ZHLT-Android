@@ -63,6 +63,9 @@ public class MainActivity extends Activity {
                 if (code == 0) {
                     code = hlvisMain(localMapPath);
                 }
+                if (code == 0) {
+                    hlradMain(localMapPath);
+                }
 
                 // Log
                 TextView log = findViewById(R.id.log);
@@ -181,4 +184,5 @@ public class MainActivity extends Activity {
     public native int hlcsgMain(String filePath);
     public native int hlbspMain(String filePath);
     public native int hlvisMain(String filePath);
+    public native int hlradMain(String filePath);
 }

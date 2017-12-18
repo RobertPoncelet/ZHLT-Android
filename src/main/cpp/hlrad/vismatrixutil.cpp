@@ -1,6 +1,6 @@
 #pragma warning(disable: 4018) //amckern - 64bit - '<' Singed/Unsigned Mismatch
 
-#include "qrad.h"
+#include "hlrad.h"
 
 #ifdef HLRAD_HULLU
 #define HLRAD_HULLU_COMPRESSEDARRAY_TWEAK

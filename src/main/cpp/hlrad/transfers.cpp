@@ -1,6 +1,6 @@
 #pragma warning(disable: 4267) // amckern - 64bit - 'size_t' to 'unsigned int'                      // identifier was truncated to '255' characters in the browser information
 
-#include "qrad.h"
+#include "hlrad.h"
 
 #ifdef SYSTEM_WIN32
 #include <sys/stat.h>

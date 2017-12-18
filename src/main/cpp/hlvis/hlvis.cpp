@@ -11,7 +11,7 @@
 
 #pragma warning(disable: 4018) //amckern - 64bit - '<' Singed/Unsigned Mismatch
 
-#include "vis.h"
+#include "hlvis.h"
 #include "hlvis_interface.h"
 
 #ifdef ZHLT_NETVIS

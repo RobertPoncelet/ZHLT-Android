@@ -78,6 +78,7 @@ set_target_properties(native-lib PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_D
 target_link_libraries(native-lib hlcsg)
 target_link_libraries(native-lib hlbsp)
 target_link_libraries(native-lib hlvis)
+target_link_libraries(native-lib hlrad)
 
 target_link_libraries(hlcsg ${log-lib})
 target_link_libraries(hlbsp ${log-lib})

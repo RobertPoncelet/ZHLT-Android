@@ -5,6 +5,7 @@
 #include "hlcsg/hlcsg_interface.h"
 #include "hlbsp/hlbsp_interface.h"
 #include "hlvis/hlvis_interface.h"
+#include "hlrad/hlrad_interface.h"
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -65,6 +66,20 @@ Java_test_zhlt_1android_MainActivity_hlvisMain(
 
     const char* cpath = (*env).GetStringUTFChars(filePath, 0);
     jint result = (jint)hlvis_main(cpath);
+    (*env).ReleaseStringUTFChars(filePath, cpath);
+
+    return result;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_test_zhlt_1android_MainActivity_hlradMain(
+        JNIEnv *env,
+        jobject /* this */,
+        jstring filePath) {
+
+    const char* cpath = (*env).GetStringUTFChars(filePath, 0);
+    jint result = (jint)hlrad_main(cpath);
     (*env).ReleaseStringUTFChars(filePath, cpath);
 
     return result;
