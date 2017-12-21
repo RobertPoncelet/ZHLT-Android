@@ -11,7 +11,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_test_zhlt_1android_MainActivity_hlcsgMain(
         JNIEnv *env,
-        jobject /* this */,
+        jobject,
         jstring filePath) {
     std::string hello = "Fix me";
 
@@ -47,7 +47,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_test_zhlt_1android_MainActivity_hlbspMain(
         JNIEnv *env,
-        jobject /* this */,
+        jobject,
         jstring filePath) {
 
     const char* cpath = (*env).GetStringUTFChars(filePath, 0);
@@ -61,7 +61,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_test_zhlt_1android_MainActivity_hlvisMain(
         JNIEnv *env,
-        jobject /* this */,
+        jobject,
         jstring filePath) {
 
     const char* cpath = (*env).GetStringUTFChars(filePath, 0);
@@ -75,7 +75,7 @@ extern "C"
 JNIEXPORT jint JNICALL
 Java_test_zhlt_1android_MainActivity_hlradMain(
         JNIEnv *env,
-        jobject /* this */,
+        jobject,
         jstring filePath) {
 
     const char* cpath = (*env).GetStringUTFChars(filePath, 0);

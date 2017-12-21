@@ -15,6 +15,7 @@ target_link_libraries( native-lib ${log-lib} )
 #set(CMAKE_CXX_FLAGS "--fpermissive")
 
 include_directories(src/main/cpp/common)
+#include_directories(src/main/cpp/common_hlrad)
 include_directories(src/main/cpp/template)
 
 set(COMMON_DEFINITIONS
@@ -55,6 +56,7 @@ set(PROJECTS hlbsp hlcsg hlrad hlvis)
 
 file(GLOB COMMON_SOURCES "src/main/cpp/common/*.cpp")
 
+# The three "normal" projects
 foreach (proj ${PROJECTS})
 	include_directories(${proj})
 	file(GLOB PROJECT_SOURCES "src/main/cpp/${proj}/*.cpp")
@@ -68,13 +70,22 @@ foreach (proj ${PROJECTS})
 
 endforeach (proj ${PROJECTS})
 
+# hlrad, the runt of the litter
+#include_directories(hlrad)
+#file(GLOB PROJECT_SOURCES "src/main/cpp/hlrad/*.cpp")
+#list(REMOVE_ITEM PROJECT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/hlrad/hlrad.cpp")
+#MESSAGE(STATUS "Excluding executable source ${CMAKE_CURRENT_SOURCE_DIR}/hlrad/hlrad.cpp")
+#file(GLOB PROJECT_SOURCES "src/main/cpp/hlrad/*.cpp")
+#set(SOURCES ${PROJECT_SOURCES} ${COMMON_SOURCES})
+#add_library(hlrad SHARED ${SOURCES})
+
 separate_arguments(FINAL_COMMON_DEFINITIONS UNIX_COMMAND "${COMMON_DEFINITIONS}")
 set_target_properties(hlbsp PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
 set_target_properties(hlcsg PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
-set_target_properties(hlrad PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS})
 set_target_properties(hlvis PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
+set_target_properties(hlrad PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS})
 
-set_target_properties(native-lib PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS}\;DOUBLEVEC_T)
+set_target_properties(native-lib PROPERTIES COMPILE_DEFINITIONS ${FINAL_COMMON_DEFINITIONS})
 target_link_libraries(native-lib hlcsg)
 target_link_libraries(native-lib hlbsp)
 target_link_libraries(native-lib hlvis)
