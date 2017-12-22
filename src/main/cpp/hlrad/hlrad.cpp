@@ -1071,13 +1071,13 @@ static void     MakePatchForFace(const int fn, Winding* w)
             vec3_t          mins;
             vec3_t          maxs;
 
-            //patch->winding->getBounds(mins, maxs);
+            patch->winding->getBounds(mins, maxs);
             // TEMP
-            BoundingBox     bounds;
+            /*BoundingBox     bounds;
             unsigned    x;
-            //for (x=0; x<w->m_NumPoints; x++) bounds.add(w->m_Points[x]);
+            for (x=0; x<w->m_NumPoints; x++) bounds.add(w->m_Points[x]);
             VectorCopy(bounds.m_Mins, mins);
-            VectorCopy(bounds.m_Maxs, maxs);
+            VectorCopy(bounds.m_Maxs, maxs);*/
             // TEMP
 
             if (g_subdivide)
@@ -1173,7 +1173,7 @@ static void     FreeOpaqueFaceList()
 // =====================================================================================
 static void     MakePatches()
 {
-    Log("hlrad thinks vec_t is %d bytes in MakePatches()", sizeof(vec_t));
+    //Log("hlrad thinks vec_t is %d bytes in MakePatches()\n", sizeof(vec_t));
     int             i;
     int             j;
     unsigned int    k;
@@ -2496,7 +2496,7 @@ int             hlrad_main(const char* map)
         const char *user_lights = NULL;
 
         g_Program = "hlrad";
-        Log("hlrad thinks vec_t is %d bytes in main()", sizeof(vec_t));
+        //Log("hlrad thinks vec_t is %d bytes in main()", sizeof(vec_t));
 
         /*if (argc == 1)
             Usage();

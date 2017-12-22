@@ -158,7 +158,7 @@
 
 /*inline*/ void PlaneFromPoints(const vec_t* const p1, const vec_t* const p2, const vec_t* const p3, dplane_t* plane)
 {
-    Log("mathutil thinks vec_t is %d bytes", sizeof(vec_t));
+    //Log("mathutil thinks vec_t is %d bytes", sizeof(vec_t));
 	vec3_t	temp, temp2;
 	VectorSubtract(p3,p2,temp);
 	VectorSubtract(p1,p2,temp2);
