@@ -11,15 +11,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
+
+import test.zhlt_android.FileUtils;
 
 public class MainActivity extends Activity {
 
@@ -72,7 +69,7 @@ public class MainActivity extends Activity {
                 String logString;
                 String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
                 try {
-                    logString = getStringFromFile(logPath);
+                    logString = FileUtils.getStringFromFile(logPath);
                     log.setText(logString);
                 } catch (Exception e) {
                     log.setText("Could not open log file " + logPath);
@@ -89,7 +86,7 @@ public class MainActivity extends Activity {
                         String bspPath = storage.getPath() + File.separator + mapName + ".bsp";
 
                         tv.setText(bspPath);
-                        createFileFromInputStream(new FileInputStream(localBsp), bspPath);
+                        FileUtils.createFileFromInputStream(new FileInputStream(localBsp), bspPath);
                     } else {
                         tv.setText("External storage unavailable");
                     }
@@ -120,65 +117,12 @@ public class MainActivity extends Activity {
 
             try {
                 InputStream inStream = getContentResolver().openInputStream(mapUri);
-                createFileFromInputStream(inStream, filePath);
+                FileUtils.createFileFromInputStream(inStream, filePath);
                 localMapPath = filePath;
             } catch (IOException e) {
                 mapPathView.setText(e.toString());
             }
         }
-    }
-
-    public static String convertStreamToString(InputStream is) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        reader.close();
-        return sb.toString();
-    }
-
-    public static String getStringFromFile (String filePath) throws Exception {
-        File fl = new File(filePath);
-        FileInputStream fin = new FileInputStream(fl);
-        String ret = convertStreamToString(fin);
-        //Make sure you close all streams.
-        fin.close();
-        return ret;
-    }
-
-    public void copy(File src, File dst) throws IOException {
-        FileInputStream inStream = new FileInputStream(src);
-        FileOutputStream outStream = new FileOutputStream(dst);
-        FileChannel inChannel = inStream.getChannel();
-        FileChannel outChannel = outStream.getChannel();
-        inChannel.transferTo(0, inChannel.size(), outChannel);
-        inStream.close();
-        outStream.close();
-    }
-
-
-    private static File createFileFromInputStream(InputStream inputStream, String fileName) {
-        try{
-            File f = new File(fileName);
-            f.setWritable(true, false);
-            OutputStream outputStream = new FileOutputStream(f);
-            byte buffer[] = new byte[1024];
-            int length;
-
-            while((length=inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer,0,length);
-            }
-
-            outputStream.close();
-            inputStream.close();
-
-            return f;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public native int hlcsgMain(String filePath);
