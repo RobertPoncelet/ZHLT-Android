@@ -57,10 +57,6 @@ public class MainActivity extends Activity {
                 Log.d("ZHLT-Android", "==================== STARTED ====================");
                 tv.setText(hlcsgMain(localMapPath));
 
-                if (!tv.getText().equals("Fix me")) {
-                    return;
-                }
-
                 // Log
                 TextView log = (TextView) findViewById(R.id.log);
                 String logString;
@@ -152,27 +148,21 @@ public class MainActivity extends Activity {
         outStream.close();
     }
 
+    private static File createFileFromInputStream(InputStream inputStream, String fileName) throws IOException {
+        File f = new File(fileName);
+        f.setWritable(true, false);
+        OutputStream outputStream = new FileOutputStream(f);
+        byte buffer[] = new byte[1024];
+        int length;
 
-    private static File createFileFromInputStream(InputStream inputStream, String fileName) {
-        try{
-            File f = new File(fileName);
-            f.setWritable(true, false);
-            OutputStream outputStream = new FileOutputStream(f);
-            byte buffer[] = new byte[1024];
-            int length;
-
-            while((length=inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer,0,length);
-            }
-
-            outputStream.close();
-            inputStream.close();
-
-            return f;
-        } catch (IOException e) {
-            e.printStackTrace();
+        while((length=inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer,0,length);
         }
-        return null;
+
+        outputStream.close();
+        inputStream.close();
+
+        return f;
     }
 
     public native String hlcsgMain(String filePath);
