@@ -100,27 +100,41 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // We just received the user-selected map file from the browser
-        // Now copy it to the local directory
         if (requestCode == PICK_FILE && resultCode == RESULT_OK) {
-            mapUri = data.getData();
-            TextView mapPathView = findViewById(R.id.mapPath);
-            mapPathView.setText(mapUri.getPath());
+            Uri uri = data.getData();
+            String uriPath = uri.getPath();
+            String[] strings = uriPath.split("\\.");
+            switch (strings[strings.length-1]) {
+                case "json":
+                    // stuff
+                    break;
 
-            File in = new File(mapUri.getPath());
-            String[] strings = in.getName().split(":");
-            String fileName = strings[strings.length-1];
-            String filePath = getFilesDir().getPath() + File.separator + fileName;
+                case "map":
+                    // We just received the user-selected map file from the browser
+                    // Now copy it to the local directory
+                    mapUri = uri;
+                    TextView mapPathView = findViewById(R.id.mapPath);
+                    mapPathView.setText(mapUri.getPath());
 
-            strings = fileName.split("\\.");
-            mapName = strings[strings.length-2];
+                    File in = new File(mapUri.getPath());
+                    strings = in.getName().split(":");
+                    String fileName = strings[strings.length - 1];
+                    String filePath = getFilesDir().getPath() + File.separator + fileName;
 
-            try {
-                InputStream inStream = getContentResolver().openInputStream(mapUri);
-                FileUtils.createFileFromInputStream(inStream, filePath);
-                localMapPath = filePath;
-            } catch (IOException e) {
-                mapPathView.setText(e.toString());
+                    strings = fileName.split("\\.");
+                    mapName = strings[strings.length - 2];
+
+                    try {
+                        InputStream inStream = getContentResolver().openInputStream(mapUri);
+                        FileUtils.createFileFromInputStream(inStream, filePath);
+                        localMapPath = filePath;
+                    } catch (IOException e) {
+                        mapPathView.setText(e.toString());
+                    }
+                    break;
+
+                default:
+                    break;
             }
         }
     }
