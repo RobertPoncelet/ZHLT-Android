@@ -78,7 +78,7 @@ class Face {
     }
 
     public void out(PrintStream p) {
-        p.print("\t\t");
+        p.print("\t\t\t");
         for (Vector v : points) {
             p.print("( ");
             v.out(p);
@@ -89,13 +89,13 @@ class Face {
         uAxis.out(p);
         p.print(" ] [ ");
         vAxis.out(p);
-        p.print(" ] ");*/ p.print(" ");
+        p.print(" ] ");
         p.print(String.valueOf((int)rotation));
         p.print(" ");
         p.print(String.valueOf((int)scaleX));
         p.print(" ");
-        p.print(String.valueOf((int)scaleY));
-        p.print("\n");
+        p.print(String.valueOf((int)scaleY));*/
+        p.print(" 0 0 0 1 1\n"); // ????
     }
 }
 

@@ -23,7 +23,7 @@ import test.zhlt_android.MapFile;
 public class JsonParser {
     public static final String TAG = "ZHLT-Android";
 
-    public void parse(InputStream jsonStream, File outFile) {
+    public boolean parse(InputStream jsonStream, File outFile) {
         try {
 
             String jsonString = FileUtils.convertStreamToString(jsonStream);
@@ -53,12 +53,15 @@ public class JsonParser {
             map.write(p);
             p.close();
 
+            return true;
         } catch (JSONException e) {
             Log.d(TAG, String.format("JSON Exception! %s", e.toString()));
             e.printStackTrace();
+            return false;
         } catch (Exception e) {
             Log.d(TAG, String.format("Exception! %s", e.toString()));
             e.printStackTrace();
+            return false;
         }
     }
 

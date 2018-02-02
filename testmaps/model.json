@@ -1,0 +1,65 @@
+{
+ "type": "Qubism-Model",
+ "version": 4,
+ "scale": 0,
+ "unit": "None",
+ "camera": {
+  "latitude": 0.2719014883041382,
+  "longitude": 0.1111111044883728,
+  "altitude": 1600,
+  "focus_x": 128,
+  "focus_y": 128,
+  "focus_z": 128,
+  "orientation": 135
+ },
+ "qubes": [
+  {
+   "id": "58bb45f3-e62d-4635-b839-528d11f3c567",
+   "pos_x": 0,
+   "size_x": 256,
+   "pos_y": 0,
+   "size_y": 256,
+   "pos_z": 0,
+   "size_z": 256,
+   "colour": 16777215,
+   "shape": 255,
+   "orient": -1
+  },
+  {
+   "id": "89f4296f-f12e-4388-865e-063d4fde7e08",
+   "pos_x": 0,
+   "size_x": 256,
+   "pos_y": 256,
+   "size_y": 256,
+   "pos_z": 0,
+   "size_z": 256,
+   "colour": 16777215,
+   "shape": 255,
+   "orient": -1
+  },
+  {
+   "id": "dafdafdafdafa",
+   "pos_x": 0,
+   "size_x": 256,
+   "pos_y": 0,
+   "size_y": 256,
+   "pos_z": 256,
+   "size_z": 256,
+   "colour": 16777215,
+   "shape": 255,
+   "orient": -1
+  },
+  {
+   "id": "dafdafdafdffffffafa",
+   "pos_x": 256,
+   "size_x": 256,
+   "pos_y": 0,
+   "size_y": 256,
+   "pos_z": 0,
+   "size_z": 256,
+   "colour": 16777215,
+   "shape": 255,
+   "orient": -1
+  }
+ ]
+}

@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -124,8 +125,12 @@ public class MainActivity extends Activity {
                         }
                         String filePath = dir + File.separator + fileName + ".map";
                         JsonParser json = new JsonParser();
-                        json.parse(getContentResolver().openInputStream(uri), new File(filePath));
-                        Log.d(TAG, String.format("Written map to %s", filePath));
+                        boolean success = json.parse(getContentResolver().openInputStream(uri), new File(filePath));
+                        if (success) {
+                            Toast.makeText(getApplicationContext(), String.format("Written map to %s", filePath), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), String.format("Error parsing JSON", filePath), Toast.LENGTH_LONG).show();
+                        }
                     } catch (IOException e) {
                         Log.d(TAG, String.format("IOException! %s", e.toString()));
                         e.printStackTrace();
