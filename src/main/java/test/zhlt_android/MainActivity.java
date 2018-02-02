@@ -102,14 +102,41 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_FILE && resultCode == RESULT_OK) {
             Uri uri = data.getData();
+            if (uri == null) {
+                return;
+            }
+
             String uriPath = uri.getPath();
             String[] strings = uriPath.split("\\.");
             switch (strings[strings.length-1]) {
                 case "json":
-                    // stuff
+                    try {
+                        Log.d(TAG, "Starting JSON parse");
+                        strings = uriPath.split(":");
+                        String fileName = strings[strings.length - 1];
+                        strings = fileName.split("\\.");
+                        fileName = strings[strings.length - 2];
+                        String dir;
+                        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                            dir = getExternalFilesDir(null).getPath();
+                        } else {
+                            dir = getFilesDir().getPath();
+                        }
+                        String filePath = dir + File.separator + fileName + ".map";
+                        JsonParser json = new JsonParser();
+                        json.parse(getContentResolver().openInputStream(uri), new File(filePath));
+                        Log.d(TAG, String.format("Written map to %s", filePath));
+                    } catch (IOException e) {
+                        Log.d(TAG, String.format("IOException! %s", e.toString()));
+                        e.printStackTrace();
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        Log.d(TAG, String.format("ArrayIndexOutOfBoundsException! %s", e.toString()));
+                        e.printStackTrace();
+                    }
                     break;
 
                 case "map":
+                    Log.d(TAG, "Starting map compile");
                     // We just received the user-selected map file from the browser
                     // Now copy it to the local directory
                     mapUri = uri;
@@ -134,6 +161,7 @@ public class MainActivity extends Activity {
                     break;
 
                 default:
+                    Log.d(TAG, "No result");
                     break;
             }
         }

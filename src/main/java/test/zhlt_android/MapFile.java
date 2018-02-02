@@ -1,7 +1,11 @@
 package test.zhlt_android;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,10 +14,16 @@ import java.util.Map;
  */
 
 class MapFile {
+    public static final String TAG = "ZHLT-Android";
     public List<Entity> ents;
+
+    public MapFile() {
+        ents = new ArrayList<Entity>();
+    }
 
     public void write(PrintStream p) {
         for (Entity ent : ents) {
+            Log.d(TAG, String.format("Writing entity %s", ent.kvs.get("classname")));
             ent.out(p);
         }
     }
@@ -24,6 +34,8 @@ class Entity {
     public List<Brush> brushes;
 
     public Entity(String classname) {
+        kvs = new HashMap<String, String>();
+        brushes = new ArrayList<Brush>();
         kvs.put("classname", classname);
     }
 
@@ -41,6 +53,7 @@ class Entity {
         {
             b.out(p);
         }
+        p.print("}\n");
     }
 }
 
@@ -72,16 +85,16 @@ class Face {
             p.print(" ) ");
         }
         p.print(texName);
-        p.print(" [ ");
+        /*p.print(" [ ");
         uAxis.out(p);
         p.print(" ] [ ");
         vAxis.out(p);
-        p.print(" ] ");
-        p.print(String.valueOf(rotation));
+        p.print(" ] ");*/ p.print(" ");
+        p.print(String.valueOf((int)rotation));
         p.print(" ");
-        p.print(String.valueOf(scaleX));
+        p.print(String.valueOf((int)scaleX));
         p.print(" ");
-        p.print(String.valueOf(scaleY));
+        p.print(String.valueOf((int)scaleY));
         p.print("\n");
     }
 }
@@ -120,7 +133,7 @@ class Vector {
 
     public void out(PrintStream p) {
         for (int i = 0; i < v.length; ++i) {
-            p.print(String.valueOf(v[i]));
+            p.print(String.valueOf((int)v[i]));
             if (i != v.length - 1) {
                 p.print(" ");
             }

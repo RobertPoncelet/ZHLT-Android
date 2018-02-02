@@ -4,12 +4,15 @@ package test.zhlt_android;
  * Created by robert.poncelet on 29/01/18.
  */
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +21,12 @@ import test.zhlt_android.FileUtils;
 import test.zhlt_android.MapFile;
 
 public class JsonParser {
-    public void parse(File jsonFile, File outFile) {
+    public static final String TAG = "ZHLT-Android";
+
+    public void parse(InputStream jsonStream, File outFile) {
         try {
 
-            String jsonString = FileUtils.getStringFromFile(jsonFile.getPath());
+            String jsonString = FileUtils.convertStreamToString(jsonStream);
             JSONObject json = new JSONObject(jsonString);
 
             MapFile map = new MapFile();
@@ -44,12 +49,15 @@ public class JsonParser {
             map.ents.add(player);
 
             PrintStream p = new PrintStream(new FileOutputStream(outFile));
+            Log.d(TAG, "Starting map write");
             map.write(p);
             p.close();
 
         } catch (JSONException e) {
+            Log.d(TAG, String.format("JSON Exception! %s", e.toString()));
             e.printStackTrace();
         } catch (Exception e) {
+            Log.d(TAG, String.format("Exception! %s", e.toString()));
             e.printStackTrace();
         }
     }
