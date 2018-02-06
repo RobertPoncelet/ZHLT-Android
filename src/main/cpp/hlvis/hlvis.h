@@ -49,7 +49,8 @@
 
 #define PORTALFILE      "PRT1" // WTF?
 
-#define	MAX_POINTS_ON_FIXED_WINDING	32
+//#define	MAX_POINTS_ON_FIXED_WINDING	32
+const static int MAX_POINTS_ON_FIXED_WINDING = 32;
 
 typedef struct
 {

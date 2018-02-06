@@ -16,7 +16,7 @@
 #include <vector>
 #include <string>
 
-#include "qrad.h"
+#include "hlrad.h"
 #include "cmdlib.h"
 
 /*
@@ -1072,6 +1072,13 @@ static void     MakePatchForFace(const int fn, Winding* w)
             vec3_t          maxs;
 
             patch->winding->getBounds(mins, maxs);
+            // TEMP
+            /*BoundingBox     bounds;
+            unsigned    x;
+            for (x=0; x<w->m_NumPoints; x++) bounds.add(w->m_Points[x]);
+            VectorCopy(bounds.m_Mins, mins);
+            VectorCopy(bounds.m_Maxs, maxs);*/
+            // TEMP
 
             if (g_subdivide)
             {
@@ -1166,6 +1173,7 @@ static void     FreeOpaqueFaceList()
 // =====================================================================================
 static void     MakePatches()
 {
+    //Log("hlrad thinks vec_t is %d bytes in MakePatches()\n", sizeof(vec_t));
     int             i;
     int             j;
     unsigned int    k;
@@ -2388,602 +2396,705 @@ void            LoadRadFiles(const char* const mapname, const char* const user_r
 #endif
 }
 
+void InitGlobals()
+{
+    g_dmodels =         new dmodel_t        [MAX_MAP_MODELS]();
+    g_dvisdata =        new byte            [MAX_MAP_VISIBILITY]();
+    g_dentdata =        new char            [MAX_MAP_ENTSTRING]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dplanes =         new dplane_t        [MAX_INTERNAL_MAP_PLANES]();
+    g_dleafs =          new dleaf_t         [MAX_MAP_LEAFS]();
+    g_dvertexes =       new dvertex_t       [MAX_MAP_VERTS]();
+    g_dnodes =          new dnode_t         [MAX_MAP_NODES]();
+    g_texinfo =         new texinfo_t       [MAX_MAP_TEXINFO]();
+    g_dfaces =          new dface_t         [MAX_MAP_FACES]();
+    g_dclipnodes =      new dclipnode_t     [MAX_MAP_CLIPNODES]();
+    g_dedges =          new dedge_t         [MAX_MAP_EDGES]();
+    g_dmarksurfaces =   new unsigned short  [MAX_MAP_MARKSURFACES]();
+    g_dsurfedges =      new int             [MAX_MAP_SURFEDGES]();
+    g_entities =        new entity_t        [MAX_MAP_ENTITIES]();
+
+    //g_mapbrushes =      new brush_t         [MAX_MAP_BRUSHES]();
+    //g_brushsides =      new side_t          [MAX_MAP_SIDES]();
+    //g_mapplanes =       new plane_t         [MAX_MAP_PLANES]();
+}
+
+// =====================================================================================
+//  CleanUpGlobals()
+//           _---_______
+//          / ///      _|  delet this
+//         /    _______|
+//        /    /(/
+//       /____/
+// =====================================================================================
+void            CleanUpGlobals()
+{
+    // Map stuff
+
+    g_numclipnodes = 0;
+    delete[] g_dclipnodes;
+
+    g_numedges = 0;
+    delete[] g_dedges;
+
+    g_numentities = 0;
+    delete[] g_entities;
+
+    g_numfaces = 0;
+    delete[] g_dfaces;
+
+    g_numleafs = 0;
+    delete[] g_dleafs;
+
+    g_nummarksurfaces = 0;
+    delete[] g_dmarksurfaces;
+
+    g_nummodels = 0;
+    delete[] g_dmodels;
+
+    g_numnodes = 0;
+    delete[] g_dnodes;
+
+    g_numplanes = 0;
+    delete[] g_dplanes;
+
+    g_numsurfedges = 0;
+    delete[] g_dsurfedges;
+
+    g_numtexinfo = 0;
+    delete[] g_texinfo;
+
+    g_numvertexes = 0;
+    delete[] g_dvertexes;
+
+    g_visdatasize = 0;
+    delete[] g_dvisdata;
+
+    // Logs
+
+    g_Program = "Uninitialized variable ::g_Program";
+    memset(g_Mapname, 0, sizeof(char) * _MAX_PATH);
+
+    g_developer = DEFAULT_DEVELOPER;
+    g_verbose = DEFAULT_VERBOSE;
+    g_log = DEFAULT_LOG;
+
+    g_clientid = 0;
+    g_nextclientid = 0;
+}
+
 // =====================================================================================
 //  main
 // =====================================================================================
-int             main(const int argc, char** argv)
+int             hlrad_main(const char* map)
 {
-    int             i;
-    double          start, end;
-    const char*     mapname_from_arg = NULL;
-    const char*     user_lights = NULL;
+    // TODO: check that memory is allocated for the globals like I did with hlcsg
+    try {
+        int i;
+        double start, end;
+        const char *mapname_from_arg = NULL;
+        const char *user_lights = NULL;
 
-    g_Program = "hlrad";
+        g_Program = "hlrad";
+        //Log("hlrad thinks vec_t is %d bytes in main()", sizeof(vec_t));
 
-    if (argc == 1)
-        Usage();
+        /*if (argc == 1)
+            Usage();
 
-    for (i = 1; i < argc; i++)
-    {
-        if (!strcasecmp(argv[i], "-dump"))
+        for (i = 1; i < argc; i++)
         {
-            g_dumppatches = true;
-        }
-        else if (!strcasecmp(argv[i], "-bounce"))
-        {
-            if (i < argc)
+            if (!strcasecmp(argv[i], "-dump"))
             {
-                g_numbounce = atoi(argv[++i]);
-                if (g_numbounce > 1000)
+                g_dumppatches = true;
+            }
+            else if (!strcasecmp(argv[i], "-bounce"))
+            {
+                if (i < argc)
                 {
-                    Log("Unexpectedly large value (>1000) for '-bounce'\n");
+                    g_numbounce = atoi(argv[++i]);
+                    if (g_numbounce > 1000)
+                    {
+                        Log("Unexpectedly large value (>1000) for '-bounce'\n");
+                        Usage();
+                    }
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-dev"))
             {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-dev"))
-        {
-            if (i < argc)
-            {
-                g_developer = (developer_level_t)atoi(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-verbose"))
-        {
-            g_verbose = true;
-        }
-        else if (!strcasecmp(argv[i], "-noinfo"))
-        {
-            g_info = false;
-        }
-        else if (!strcasecmp(argv[i], "-threads"))
-        {
-            if (i < argc)
-            {
-                g_numthreads = atoi(argv[++i]);
-                if (g_numthreads < 1)
+                if (i < argc)
                 {
-                    Log("Expected value of at least 1 for '-threads'\n");
+                    g_developer = (developer_level_t)atoi(argv[++i]);
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-verbose"))
             {
-                Usage();
+                g_verbose = true;
             }
-        }
-#ifdef SYSTEM_WIN32
-        else if (!strcasecmp(argv[i], "-estimate"))
-        {
-            g_estimate = true;
-        }
-#endif
-#ifdef SYSTEM_POSIX
-        else if (!strcasecmp(argv[i], "-noestimate"))
-        {
-            g_estimate = false;
-        }
-#endif
-#ifdef ZHLT_NETVIS
-        else if (!strcasecmp(argv[i], "-client"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-noinfo"))
             {
-                g_clientid = atoi(argv[++i]);
+                g_info = false;
             }
-            else
+            else if (!strcasecmp(argv[i], "-threads"))
             {
-                Usage();
-            }
-        }
-#endif
-        else if (!strcasecmp(argv[i], "-nolerp"))
-        {
-             g_lerp_enabled  = false;
-        }
-        else if (!strcasecmp(argv[i], "-chop"))
-        {
-            if (i < argc)
-            {
-                g_chop = atof(argv[++i]);
-                if (g_chop < 1)
+                if (i < argc)
                 {
-                    Log("expected value greater than 1 for '-chop'\n");
-                    Usage();
+                    g_numthreads = atoi(argv[++i]);
+                    if (g_numthreads < 1)
+                    {
+                        Log("Expected value of at least 1 for '-threads'\n");
+                        Usage();
+                    }
                 }
-                if (g_chop < 32)
+                else
                 {
-                    Log("Warning: Chop values below 32 are not recommended.");
-                }
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-texchop"))
-        {
-            if (i < argc)
-            {
-                g_texchop = atof(argv[++i]);
-                if (g_texchop < 1)
-                {
-                    Log("expected value greater than 1 for '-texchop'\n");
-                    Usage();
-                }
-                if (g_texchop < 32)
-                {
-                    Log("Warning: texchop values below 16 are not recommended.");
-                }
-            }
-            else
-            {
-                Usage();
-            }
-        }
-		else if (!strcasecmp(argv[i], "-nodynbounce"))
-		{
-			g_bounce_dynamic = false;
-		}
-        else if (!strcasecmp(argv[i], "-notexscale"))
-        {
-            g_texscale = false;
-        }
-        else if (!strcasecmp(argv[i], "-nosubdivide"))
-        {
-            if (i < argc)
-            {
-                g_subdivide = false;
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-scale"))
-        {
-            if (i < argc)
-            {
-             	// ------------------------------------------------------------------------
-		        // Changes by Adam Foster - afoster@compsoc.man.ac.uk
-		        // Munge monochrome lightscale into colour one
-#ifdef HLRAD_WHOME
-	    	    i++;
-                g_colour_lightscale[0] = (float)atof(argv[i]);
-		        g_colour_lightscale[1] = (float)atof(argv[i]);
-		        g_colour_lightscale[2] = (float)atof(argv[i]);
-#else
-                g_lightscale = (float)atof(argv[++i]);
-#endif
-		        // ------------------------------------------------------------------------
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-falloff"))
-        {
-            if (i < argc)
-            {
-                g_falloff = (int)atoi(argv[++i]);
-                if ((g_falloff != 1) && (g_falloff != 2))
-                {
-                    Log("-falloff must be 1 or 2\n");
                     Usage();
                 }
             }
-            else
+    #ifdef SYSTEM_WIN32
+            else if (!strcasecmp(argv[i], "-estimate"))
             {
-                Usage();
+                g_estimate = true;
             }
-        }
-        else if (!strcasecmp(argv[i], "-fade"))
-        {
-            if (i < argc)
+    #endif
+    #ifdef SYSTEM_POSIX
+            else if (!strcasecmp(argv[i], "-noestimate"))
             {
-                g_fade = (float)atof(argv[++i]);
-                if (g_fade < 0.0)
+                g_estimate = false;
+            }
+    #endif
+    #ifdef ZHLT_NETVIS
+            else if (!strcasecmp(argv[i], "-client"))
+            {
+                if (i < argc)
                 {
-                    Log("-fade must be a positive number\n");
+                    g_clientid = atoi(argv[++i]);
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
+    #endif
+            else if (!strcasecmp(argv[i], "-nolerp"))
             {
-                Usage();
+                 g_lerp_enabled  = false;
             }
-        }
-        else if (!strcasecmp(argv[i], "-ambient"))
-        {
-            if (i + 3 < argc)
+            else if (!strcasecmp(argv[i], "-chop"))
             {
-                g_ambient[0] = (float)atof(argv[++i]) * 128;
-                g_ambient[1] = (float)atof(argv[++i]) * 128;
-                g_ambient[2] = (float)atof(argv[++i]) * 128;
-            }
-            else
-            {
-                Error("expected three color values after '-ambient'\n");
-            }
-        }
-        else if (!strcasecmp(argv[i], "-maxlight"))
-        {
-            if (i < argc)
-            {
-                g_maxlight = (float)atof(argv[++i]) * 128;
-                if (g_maxlight <= 0)
+                if (i < argc)
                 {
-                    Log("expected positive value after '-maxlight'\n");
+                    g_chop = atof(argv[++i]);
+                    if (g_chop < 1)
+                    {
+                        Log("expected value greater than 1 for '-chop'\n");
+                        Usage();
+                    }
+                    if (g_chop < 32)
+                    {
+                        Log("Warning: Chop values below 32 are not recommended.");
+                    }
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-texchop"))
             {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-lights"))
-        {
-            if (i < argc)
-            {
-                user_lights = argv[++i];
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-circus"))
-        {
-            g_circus = true;
-        }
-        else if (!strcasecmp(argv[i], "-noskyfix"))
-        {
-            g_sky_lighting_fix = false;
-        }
-        else if (!strcasecmp(argv[i], "-incremental"))
-        {
-            g_incremental = true;
-        }
-        else if (!strcasecmp(argv[i], "-chart"))
-        {
-            g_chart = true;
-        }
-        else if (!strcasecmp(argv[i], "-low"))
-        {
-            g_threadpriority = eThreadPriorityLow;
-        }
-        else if (!strcasecmp(argv[i], "-high"))
-        {
-            g_threadpriority = eThreadPriorityHigh;
-        }
-        else if (!strcasecmp(argv[i], "-nolog"))
-        {
-            g_log = false;
-        }
-        else if (!strcasecmp(argv[i], "-gamma"))
-        {
-            if (i < argc)
-            {
-            	// ------------------------------------------------------------------------
-		        // Changes by Adam Foster - afoster@compsoc.man.ac.uk
-		        // Munge values from original, monochrome gamma into colour gamma
-#ifdef HLRAD_WHOME
-	    	    i++;
-                g_colour_qgamma[0] = (float)atof(argv[i]);
-		        g_colour_qgamma[1] = (float)atof(argv[i]);
-		        g_colour_qgamma[2] = (float)atof(argv[i]);
-#else
-                g_qgamma = (float)atof(argv[++i]);
-#endif
-		        // ------------------------------------------------------------------------
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-dlight"))
-        {
-            if (i < argc)
-            {
-                g_dlight_threshold = (float)atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-extra"))
-        {
-            g_extra = true;
-        }
-        else if (!strcasecmp(argv[i], "-sky"))
-        {
-            if (i < argc)
-            {
-                g_indirect_sun = (float)atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-smooth"))
-        {
-            if (i < argc)
-            {
-                g_smoothing_value = atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-coring"))
-        {
-            if (i < argc)
-            {
-                g_coring = (float)atof(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-texdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
-
-                if (x > g_max_map_miptex)
+                if (i < argc)
                 {
-                    g_max_map_miptex = x;
+                    g_texchop = atof(argv[++i]);
+                    if (g_texchop < 1)
+                    {
+                        Log("expected value greater than 1 for '-texchop'\n");
+                        Usage();
+                    }
+                    if (g_texchop < 32)
+                    {
+                        Log("Warning: texchop values below 16 are not recommended.");
+                    }
+                }
+                else
+                {
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-nodynbounce"))
             {
-                Usage();
+                g_bounce_dynamic = false;
             }
-        }
-        else if (!strcasecmp(argv[i], "-lightdata"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-notexscale"))
             {
-                int             x = atoi(argv[++i]) * 1024;
-
-                if (x > g_max_map_lightdata)
+                g_texscale = false;
+            }
+            else if (!strcasecmp(argv[i], "-nosubdivide"))
+            {
+                if (i < argc)
                 {
-                    g_max_map_lightdata = x;
+                    g_subdivide = false;
+                }
+                else
+                {
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-scale"))
             {
+                if (i < argc)
+                {
+                    // ------------------------------------------------------------------------
+                    // Changes by Adam Foster - afoster@compsoc.man.ac.uk
+                    // Munge monochrome lightscale into colour one
+    #ifdef HLRAD_WHOME
+                    i++;
+                    g_colour_lightscale[0] = (float)atof(argv[i]);
+                    g_colour_lightscale[1] = (float)atof(argv[i]);
+                    g_colour_lightscale[2] = (float)atof(argv[i]);
+    #else
+                    g_lightscale = (float)atof(argv[++i]);
+    #endif
+                    // ------------------------------------------------------------------------
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-falloff"))
+            {
+                if (i < argc)
+                {
+                    g_falloff = (int)atoi(argv[++i]);
+                    if ((g_falloff != 1) && (g_falloff != 2))
+                    {
+                        Log("-falloff must be 1 or 2\n");
+                        Usage();
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-fade"))
+            {
+                if (i < argc)
+                {
+                    g_fade = (float)atof(argv[++i]);
+                    if (g_fade < 0.0)
+                    {
+                        Log("-fade must be a positive number\n");
+                        Usage();
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-ambient"))
+            {
+                if (i + 3 < argc)
+                {
+                    g_ambient[0] = (float)atof(argv[++i]) * 128;
+                    g_ambient[1] = (float)atof(argv[++i]) * 128;
+                    g_ambient[2] = (float)atof(argv[++i]) * 128;
+                }
+                else
+                {
+                    Error("expected three color values after '-ambient'\n");
+                }
+            }
+            else if (!strcasecmp(argv[i], "-maxlight"))
+            {
+                if (i < argc)
+                {
+                    g_maxlight = (float)atof(argv[++i]) * 128;
+                    if (g_maxlight <= 0)
+                    {
+                        Log("expected positive value after '-maxlight'\n");
+                        Usage();
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-lights"))
+            {
+                if (i < argc)
+                {
+                    user_lights = argv[++i];
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-circus"))
+            {
+                g_circus = true;
+            }
+            else if (!strcasecmp(argv[i], "-noskyfix"))
+            {
+                g_sky_lighting_fix = false;
+            }
+            else if (!strcasecmp(argv[i], "-incremental"))
+            {
+                g_incremental = true;
+            }
+            else if (!strcasecmp(argv[i], "-chart"))
+            {
+                g_chart = true;
+            }
+            else if (!strcasecmp(argv[i], "-low"))
+            {
+                g_threadpriority = eThreadPriorityLow;
+            }
+            else if (!strcasecmp(argv[i], "-high"))
+            {
+                g_threadpriority = eThreadPriorityHigh;
+            }
+            else if (!strcasecmp(argv[i], "-nolog"))
+            {
+                g_log = false;
+            }
+            else if (!strcasecmp(argv[i], "-gamma"))
+            {
+                if (i < argc)
+                {
+                    // ------------------------------------------------------------------------
+                    // Changes by Adam Foster - afoster@compsoc.man.ac.uk
+                    // Munge values from original, monochrome gamma into colour gamma
+    #ifdef HLRAD_WHOME
+                    i++;
+                    g_colour_qgamma[0] = (float)atof(argv[i]);
+                    g_colour_qgamma[1] = (float)atof(argv[i]);
+                    g_colour_qgamma[2] = (float)atof(argv[i]);
+    #else
+                    g_qgamma = (float)atof(argv[++i]);
+    #endif
+                    // ------------------------------------------------------------------------
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-dlight"))
+            {
+                if (i < argc)
+                {
+                    g_dlight_threshold = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-extra"))
+            {
+                g_extra = true;
+            }
+            else if (!strcasecmp(argv[i], "-sky"))
+            {
+                if (i < argc)
+                {
+                    g_indirect_sun = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-smooth"))
+            {
+                if (i < argc)
+                {
+                    g_smoothing_value = atof(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-coring"))
+            {
+                if (i < argc)
+                {
+                    g_coring = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-texdata"))
+            {
+                if (i < argc)
+                {
+                    int             x = atoi(argv[++i]) * 1024;
+
+                    if (x > g_max_map_miptex)
+                    {
+                        g_max_map_miptex = x;
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-lightdata"))
+            {
+                if (i < argc)
+                {
+                    int             x = atoi(argv[++i]) * 1024;
+
+                    if (x > g_max_map_lightdata)
+                    {
+                        g_max_map_lightdata = x;
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+            else if (!strcasecmp(argv[i], "-sparse"))
+            {
+                g_method = eMethodSparseVismatrix;
+            }
+            else if (!strcasecmp(argv[i], "-nomatrix"))
+            {
+                g_method = eMethodNoVismatrix;
+            }
+            else if (!strcasecmp(argv[i], "-nopaque"))
+            {
+                g_allow_opaques = false;
+            }
+            else if (!strcasecmp(argv[i], "-dscale"))
+            {
+                if (i < argc)
+                {
+                    g_direct_scale = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+
+            // ------------------------------------------------------------------------
+            // Changes by Adam Foster - afoster@compsoc.man.ac.uk
+    #ifdef HLRAD_WHOME
+            else if (!strcasecmp(argv[i], "-colourgamma"))
+            {
+                if (i + 3 < argc)
+                {
+                    g_colour_qgamma[0] = (float)atof(argv[++i]);
+                    g_colour_qgamma[1] = (float)atof(argv[++i]);
+                    g_colour_qgamma[2] = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Error("expected three color values after '-colourgamma'\n");
+                }
+            }
+            else if (!strcasecmp(argv[i], "-colourscale"))
+            {
+                if (i + 3 < argc)
+                {
+                    g_colour_lightscale[0] = (float)atof(argv[++i]);
+                    g_colour_lightscale[1] = (float)atof(argv[++i]);
+                    g_colour_lightscale[2] = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Error("expected three color values after '-colourscale'\n");
+                }
+            }
+
+            else if (!strcasecmp(argv[i], "-colourjitter"))
+            {
+                if (i + 3 < argc)
+                {
+                    g_colour_jitter_hack[0] = (float)atof(argv[++i]);
+                    g_colour_jitter_hack[1] = (float)atof(argv[++i]);
+                    g_colour_jitter_hack[2] = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Error("expected three color values after '-colourjitter'\n");
+                }
+            }
+            else if (!strcasecmp(argv[i], "-jitter"))
+            {
+                if (i + 3 < argc)
+                {
+                    g_jitter_hack[0] = (float)atof(argv[++i]);
+                    g_jitter_hack[1] = (float)atof(argv[++i]);
+                    g_jitter_hack[2] = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Error("expected three color values after '-jitter'\n");
+                }
+            }
+
+            else if (!strcasecmp(argv[i], "-nodiffuse"))
+            {
+                g_diffuse_hack = false;
+            }
+            else if (!strcasecmp(argv[i], "-nospotpoints"))
+            {
+                g_spotlight_hack = false;
+            }
+            else if (!strcasecmp(argv[i], "-softlight"))
+            {
+                if (i + 4 < argc)
+                {
+                    g_softlight_hack[0] = (float)atof(argv[++i]);
+                    g_softlight_hack[1] = (float)atof(argv[++i]);
+                    g_softlight_hack[2] = (float)atof(argv[++i]);
+                    g_softlight_hack_distance = (float)atof(argv[++i]);
+                }
+                else
+                {
+                    Error("expected three color scalers and a distance after '-softlight'\n");
+                }
+            }
+    #endif
+            // ------------------------------------------------------------------------
+
+    #ifdef HLRAD_HULLU
+            else if (!strcasecmp(argv[i], "-customshadowwithbounce"))
+            {
+                g_customshadow_with_bouncelight = true;
+            }
+            else if (!strcasecmp(argv[i], "-rgbtransfers"))
+            {
+                g_rgb_transfers = true;
+            }
+    #endif
+
+    #ifdef ZHLT_PROGRESSFILE // AJM
+            else if (!strcasecmp(argv[i], "-progressfile"))
+            {
+                if (i < argc)
+                {
+                    g_progressfile = argv[++i];
+                }
+                else
+                {
+                    Log("Error: -progressfile: expected path to progress file following parameter\n");
+                    Usage();
+                }
+            }
+    #endif
+
+    #ifdef HLRAD_FASTMATH
+            else if (!strcasecmp(argv[i], "-oldmath"))
+            {
+                Warning("-oldmath was introduced as a temporary workaround to a bug in HLRAD and is no longer supported.\n  Please remove it from your command line.\n");
+            }
+    #endif
+            else if (argv[i][0] == '-')
+            {
+                Log("Unknown option \"%s\"\n", argv[i]);
                 Usage();
             }
-        }
-        else if (!strcasecmp(argv[i], "-sparse"))
-        {
-            g_method = eMethodSparseVismatrix;
-        }
-        else if (!strcasecmp(argv[i], "-nomatrix"))
-        {
-            g_method = eMethodNoVismatrix;
-        }
-        else if (!strcasecmp(argv[i], "-nopaque"))
-        {
-            g_allow_opaques = false;
-        }
-        else if (!strcasecmp(argv[i], "-dscale"))
-        {
-            if (i < argc)
+            else if (!mapname_from_arg)
             {
-                g_direct_scale = (float)atof(argv[++i]);
+                mapname_from_arg = argv[i];
             }
             else
             {
+                Log("Unknown option \"%s\"\n", argv[i]);
                 Usage();
             }
-        }
+        }*/
 
-        // ------------------------------------------------------------------------
-	    // Changes by Adam Foster - afoster@compsoc.man.ac.uk
-#ifdef HLRAD_WHOME
-        else if (!strcasecmp(argv[i], "-colourgamma"))
-        {
-        	if (i + 3 < argc)
-			{
-				g_colour_qgamma[0] = (float)atof(argv[++i]);
-				g_colour_qgamma[1] = (float)atof(argv[++i]);
-				g_colour_qgamma[2] = (float)atof(argv[++i]);
-			}
-			else
-			{
-				Error("expected three color values after '-colourgamma'\n");
-			}
-        }
-        else if (!strcasecmp(argv[i], "-colourscale"))
-        {
-        	if (i + 3 < argc)
-			{
-				g_colour_lightscale[0] = (float)atof(argv[++i]);
-				g_colour_lightscale[1] = (float)atof(argv[++i]);
-				g_colour_lightscale[2] = (float)atof(argv[++i]);
-			}
-			else
-			{
-				Error("expected three color values after '-colourscale'\n");
-			}
-        }
+        mapname_from_arg = map;
 
-        else if (!strcasecmp(argv[i], "-colourjitter"))
-        {
-        	if (i + 3 < argc)
-			{
-				g_colour_jitter_hack[0] = (float)atof(argv[++i]);
-				g_colour_jitter_hack[1] = (float)atof(argv[++i]);
-				g_colour_jitter_hack[2] = (float)atof(argv[++i]);
-			}
-			else
-			{
-				Error("expected three color values after '-colourjitter'\n");
-			}
-        }
-		else if (!strcasecmp(argv[i], "-jitter"))
-        {
-        	if (i + 3 < argc)
-			{
-				g_jitter_hack[0] = (float)atof(argv[++i]);
-				g_jitter_hack[1] = (float)atof(argv[++i]);
-				g_jitter_hack[2] = (float)atof(argv[++i]);
-			}
-			else
-			{
-				Error("expected three color values after '-jitter'\n");
-			}
-        }
-
-        else if (!strcasecmp(argv[i], "-nodiffuse"))
-        {
-        	g_diffuse_hack = false;
-        }
-        else if (!strcasecmp(argv[i], "-nospotpoints"))
-        {
-        	g_spotlight_hack = false;
-        }
-        else if (!strcasecmp(argv[i], "-softlight"))
-        {
-        	if (i + 4 < argc)
-			{
-				g_softlight_hack[0] = (float)atof(argv[++i]);
-				g_softlight_hack[1] = (float)atof(argv[++i]);
-				g_softlight_hack[2] = (float)atof(argv[++i]);
-				g_softlight_hack_distance = (float)atof(argv[++i]);
-			}
-			else
-			{
-				Error("expected three color scalers and a distance after '-softlight'\n");
-			}
-        }
-#endif
-        // ------------------------------------------------------------------------
-
-#ifdef HLRAD_HULLU
-        else if (!strcasecmp(argv[i], "-customshadowwithbounce"))
-        {
-        	g_customshadow_with_bouncelight = true;
-        }
-        else if (!strcasecmp(argv[i], "-rgbtransfers"))
-        {
-        	g_rgb_transfers = true;
-        }
-#endif
-
-#ifdef ZHLT_PROGRESSFILE // AJM
-        else if (!strcasecmp(argv[i], "-progressfile"))
-        {
-            if (i < argc)
-            {
-                g_progressfile = argv[++i];
-            }
-            else
-            {
-            	Log("Error: -progressfile: expected path to progress file following parameter\n");
-                Usage();
-            }
-        }
-#endif
-
-#ifdef HLRAD_FASTMATH
-		else if (!strcasecmp(argv[i], "-oldmath"))
-		{
-			Warning("-oldmath was introduced as a temporary workaround to a bug in HLRAD and is no longer supported.\n  Please remove it from your command line.\n");
-		}
-#endif
-        else if (argv[i][0] == '-')
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
+        if (!mapname_from_arg) {
+            Log("No mapname specified\n");
             Usage();
         }
-        else if (!mapname_from_arg)
-        {
-            mapname_from_arg = argv[i];
+
+        g_smoothing_threshold = (float) cos(g_smoothing_value * (Q_PI / 180.0));
+
+        safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
+        FlipSlashes(g_Mapname);
+        StripExtension(g_Mapname);
+        OpenLog(g_clientid);
+        atexit(CloseLog);
+        ThreadSetDefault();
+        ThreadSetPriority(g_threadpriority);
+        LogStart(/*argc, argv*/);
+
+        CheckForErrorLog();
+
+        InitGlobals();
+
+        dtexdata_init();
+        atexit(dtexdata_free);
+        // END INIT
+
+        // BEGIN RAD
+        start = I_FloatTime();
+
+        // normalise maxlight
+        if (g_maxlight > 255)
+            g_maxlight = 255;
+
+        strcpy_s(g_source, mapname_from_arg);
+        StripExtension(g_source);
+        DefaultExtension(g_source, ".bsp");
+        LoadBSPFile(g_source);
+        ParseEntities();
+        Settings();
+        LoadRadFiles(g_Mapname, user_lights, "hlrad"/*argv[0]*/);
+
+        if (!g_visdatasize) {
+            Warning("No vis information, direct lighting only.");
+            g_numbounce = 0;
+            g_ambient[0] = g_ambient[1] = g_ambient[2] = 0.1f;
         }
-        else
-        {
-            Log("Unknown option \"%s\"\n", argv[i]);
-            Usage();
-        }
-    }
 
-    if (!mapname_from_arg)
+        RadWorld();
+
+        FreeOpaqueFaceList();
+        FreePatches();
+
+        if (g_chart)
+            PrintBSPFileSizes();
+
+        WriteBSPFile(g_source);
+
+        end = I_FloatTime();
+        LogTimeElapsed(end - start);
+        // END RAD
+
+        CloseLog();
+        dtexdata_free();
+        CleanUpGlobals();
+        return 0;
+    }
+    catch (int error)
     {
-        Log("No mapname specified\n");
-        Usage();
+        CloseLog();
+        dtexdata_free();
+        CleanUpGlobals();
+        return error;
     }
-
-    g_smoothing_threshold = (float)cos(g_smoothing_value * (Q_PI / 180.0));
-
-    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
-    FlipSlashes(g_Mapname);
-    StripExtension(g_Mapname);
-    OpenLog(g_clientid);
-    atexit(CloseLog);
-    ThreadSetDefault();
-    ThreadSetPriority(g_threadpriority);
-    LogStart(/*argc, argv*/);
-
-    CheckForErrorLog();
-
-    dtexdata_init();
-    atexit(dtexdata_free);
-    // END INIT
-
-    // BEGIN RAD
-    start = I_FloatTime();
-
-    // normalise maxlight
-    if (g_maxlight > 255)
-        g_maxlight = 255;
-
-    strcpy_s(g_source, mapname_from_arg);
-    StripExtension(g_source);
-    DefaultExtension(g_source, ".bsp");
-    LoadBSPFile(g_source);
-    ParseEntities();
-    Settings();
-    LoadRadFiles(g_Mapname, user_lights, argv[0]);
-    
-    if (!g_visdatasize)
-    {
-        Warning("No vis information, direct lighting only.");
-        g_numbounce = 0;
-        g_ambient[0] = g_ambient[1] = g_ambient[2] = 0.1f;
-    }
-
-    RadWorld();
-
-    FreeOpaqueFaceList();
-    FreePatches();
-
-    if (g_chart)
-        PrintBSPFileSizes();
-
-    WriteBSPFile(g_source);
-
-    end = I_FloatTime();
-    LogTimeElapsed(end - start);
-    // END RAD
-
-    return 0;
 }

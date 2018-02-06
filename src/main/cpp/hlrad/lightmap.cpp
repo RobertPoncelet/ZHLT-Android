@@ -1,4 +1,4 @@
-#include "qrad.h"
+#include "hlrad.h"
 
 edgeshare_t     g_edgeshare[MAX_MAP_EDGES];
 vec3_t          g_face_centroids[MAX_MAP_EDGES];

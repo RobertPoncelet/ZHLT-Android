@@ -17,6 +17,10 @@
 // Winding Public Methods
 //
 
+#ifndef DOUBLEVEC_T
+typedef float vec_t;
+#endif
+
 void            Winding::Print() const
 {
     UINT32 x;
@@ -98,6 +102,9 @@ void            Winding::getBounds(vec3_t& mins, vec3_t& maxs) const
 {
     BoundingBox     bounds;
     unsigned    x;
+
+    //Log("Winding thinks vec_t is %d bytes and vec3_t is %d bytes", sizeof(vec_t), sizeof(vec3_t));
+    //Log("Space between vec_ts in vec3_t: %d", (long)&mins[1] - (long)&mins[0]);
 
     for (x=0; x<m_NumPoints; x++)
     {

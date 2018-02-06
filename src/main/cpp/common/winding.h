@@ -12,7 +12,8 @@
 #include "bspfile.h"
 #include "boundingbox.h"
 
-#define MAX_POINTS_ON_WINDING 128
+//#define MAX_POINTS_ON_WINDING 128
+const static int MAX_POINTS_ON_WINDING = 128;
 // TODO: FIX THIS STUPID SHIT (MAX_POINTS_ON_WINDING)
 
 #define BASE_WINDING_DISTANCE 9000

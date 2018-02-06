@@ -8,7 +8,7 @@
 typedef unsigned char byte;
 
 #ifdef DOUBLEVEC_T
-typedef double vec_t;
+typedef float vec_t;
 #else
 typedef float vec_t;
 #endif

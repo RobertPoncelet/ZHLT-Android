@@ -3,7 +3,7 @@
 //
 //	Transparency Arrays for sparse and vismatrix methods
 //
-#include "qrad.h"
+#include "hlrad.h"
 
 #ifdef HLRAD_HULLU
 

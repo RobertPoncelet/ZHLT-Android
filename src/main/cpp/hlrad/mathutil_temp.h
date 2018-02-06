@@ -1,4 +1,4 @@
-#include "qrad.h"
+#include "hlrad.h"
 
 #define NUM_LERP_POINTS 4 //used by PointInWall (defines magic number)
 

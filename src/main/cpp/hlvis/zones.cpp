@@ -4,7 +4,7 @@
 
 #pragma warning(disable: 4018) //amckern - 64bit - '<' Singed/Unsigned Mismatch
 
-#include "vis.h"
+#include "hlvis.h"
 
 
 void Zones::set(UINT32 zone, const BoundingBox& bounds)

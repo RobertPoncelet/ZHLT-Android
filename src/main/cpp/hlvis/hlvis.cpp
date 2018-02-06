@@ -11,7 +11,8 @@
 
 #pragma warning(disable: 4018) //amckern - 64bit - '<' Singed/Unsigned Mismatch
 
-#include "vis.h"
+#include "hlvis.h"
+#include "hlvis_interface.h"
 
 #ifdef ZHLT_NETVIS
 #include "zlib.h"
@@ -1342,411 +1343,456 @@ static void     Settings()
 // =====================================================================================
 //  main
 // =====================================================================================
-int             main(const int argc, char** argv)
+int             hlvis_main(const char* map)
 {
-    char            portalfile[_MAX_PATH];
-    char            source[_MAX_PATH];
-    int             i;
-    double          start, end;
-    const char*     mapname_from_arg = NULL;
+    try
+    {
+        char            portalfile[_MAX_PATH];
+        char            source[_MAX_PATH];
+        int             i;
+        double          start, end;
+        const char*     mapname_from_arg = NULL;
 
 #ifdef ZHLT_NETVIS
-    g_Program = "netvis";
+        g_Program = "netvis";
 #else
-    g_Program = "hlvis";
+        g_Program = "hlvis";
 #endif
 
-    if (argc == 1)
-    {
-        Usage();
-    }
-
-    for (i = 1; i < argc; i++)
-    {
-        if (!strcasecmp(argv[i], "-threads"))
+        /*if (argc == 1)
         {
-            if (i < argc)
+            Usage();
+        }
+
+        for (i = 1; i < argc; i++)
+        {
+            if (!strcasecmp(argv[i], "-threads"))
             {
-                g_numthreads = atoi(argv[++i]);
-                if (g_numthreads < 1)
+                if (i < argc)
                 {
-                    Log("Expected value of at least 1 for '-threads'\n");
+                    g_numthreads = atoi(argv[++i]);
+                    if (g_numthreads < 1)
+                    {
+                        Log("Expected value of at least 1 for '-threads'\n");
+                        Usage();
+                    }
+                }
+                else
+                {
                     Usage();
                 }
             }
-            else
-            {
-                Usage();
-            }
-        }
 
 #ifdef SYSTEM_WIN32
-        else if (!strcasecmp(argv[i], "-estimate"))
-        {
-            g_estimate = true;
-        }
+            else if (!strcasecmp(argv[i], "-estimate"))
+            {
+                g_estimate = true;
+            }
 #endif
 #ifdef SYSTEM_POSIX
-        else if (!strcasecmp(argv[i], "-noestimate"))
-        {
-            g_estimate = false;
-        }
+            else if (!strcasecmp(argv[i], "-noestimate"))
+            {
+                g_estimate = false;
+            }
 #endif
 #ifdef ZHLT_NETVIS
-        else if (!strcasecmp(argv[i], "-server"))
-        {
-            g_vismode = VIS_MODE_SERVER;
-        }
-        else if (!strcasecmp(argv[i], "-connect"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-server"))
             {
-                g_vismode = VIS_MODE_CLIENT;
-                g_server_addr = argv[++i];
+                g_vismode = VIS_MODE_SERVER;
             }
-            else
+            else if (!strcasecmp(argv[i], "-connect"))
             {
-                Usage();
+                if (i < argc)
+                {
+                    g_vismode = VIS_MODE_CLIENT;
+                    g_server_addr = argv[++i];
+                }
+                else
+                {
+                    Usage();
+                }
             }
-        }
-        else if (!strcasecmp(argv[i], "-port"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-port"))
             {
-                g_port = atoi(argv[++i]);
+                if (i < argc)
+                {
+                    g_port = atoi(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
             }
-            else
+            else if (!strcasecmp(argv[i], "-rate"))
             {
-                Usage();
+                if (i < argc)
+                {
+                    g_rate = atoi(argv[++i]);
+                }
+                else
+                {
+                    Usage();
+                }
+                if (g_rate < 5)
+                {
+                    Log("Minimum -rate is 5, setting to 5 seconds\n");
+                    g_rate = 5;
+                }
+                if (g_rate > 900)
+                {
+                    Log("Maximum -rate is 900, setting to 900 seconds\n");
+                    g_rate = 900;
+                }
             }
-        }
-        else if (!strcasecmp(argv[i], "-rate"))
-        {
-            if (i < argc)
-            {
-                g_rate = atoi(argv[++i]);
-            }
-            else
-            {
-                Usage();
-            }
-            if (g_rate < 5)
-            {
-                Log("Minimum -rate is 5, setting to 5 seconds\n");
-                g_rate = 5;
-            }
-            if (g_rate > 900)
-            {
-                Log("Maximum -rate is 900, setting to 900 seconds\n");
-                g_rate = 900;
-            }
-        }
 #endif
 #ifndef ZHLT_NETVIS
-        else if (!strcasecmp(argv[i], "-fast"))
-        {
-            Log("g_fastvis = true\n");
-            g_fastvis = true;
-        }
+            else if (!strcasecmp(argv[i], "-fast"))
+            {
+                Log("g_fastvis = true\n");
+                g_fastvis = true;
+            }
 #endif
-        else if (!strcasecmp(argv[i], "-full"))
-        {
-            g_fullvis = true;
-        }
-        else if (!strcasecmp(argv[i], "-dev"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-full"))
             {
-                g_developer = (developer_level_t)atoi(argv[++i]);
+                g_fullvis = true;
             }
-            else
+            else if (!strcasecmp(argv[i], "-dev"))
             {
-                Usage();
-            }
-        }
-        else if (!strcasecmp(argv[i], "-verbose"))
-        {
-            g_verbose = true;
-        }
-
-        else if (!strcasecmp(argv[i], "-noinfo"))
-        {
-            g_info = false;
-        }
-        else if (!strcasecmp(argv[i], "-chart"))
-        {
-            g_chart = true;
-        }
-        else if (!strcasecmp(argv[i], "-low"))
-        {
-            g_threadpriority = eThreadPriorityLow;
-        }
-        else if (!strcasecmp(argv[i], "-high"))
-        {
-            g_threadpriority = eThreadPriorityHigh;
-        }
-        else if (!strcasecmp(argv[i], "-nolog"))
-        {
-            g_log = false;
-        }
-        else if (!strcasecmp(argv[i], "-texdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
-
-                if (x > g_max_map_miptex)
+                if (i < argc)
                 {
-                    g_max_map_miptex = x;
+                    g_developer = (developer_level_t)atoi(argv[++i]);
+                }
+                else
+                {
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-verbose"))
             {
-                Usage();
+                g_verbose = true;
             }
-        }
-        else if (!strcasecmp(argv[i], "-lightdata"))
-        {
-            if (i < argc)
-            {
-                int             x = atoi(argv[++i]) * 1024;
 
-                if (x > g_max_map_miptex)
+            else if (!strcasecmp(argv[i], "-noinfo"))
+            {
+                g_info = false;
+            }
+            else if (!strcasecmp(argv[i], "-chart"))
+            {
+                g_chart = true;
+            }
+            else if (!strcasecmp(argv[i], "-low"))
+            {
+                g_threadpriority = eThreadPriorityLow;
+            }
+            else if (!strcasecmp(argv[i], "-high"))
+            {
+                g_threadpriority = eThreadPriorityHigh;
+            }
+            else if (!strcasecmp(argv[i], "-nolog"))
+            {
+                g_log = false;
+            }
+            else if (!strcasecmp(argv[i], "-texdata"))
+            {
+                if (i < argc)
                 {
-                    g_max_map_miptex = x;
+                    int             x = atoi(argv[++i]) * 1024;
+
+                    if (x > g_max_map_miptex)
+                    {
+                        g_max_map_miptex = x;
+                    }
+                }
+                else
+                {
+                    Usage();
                 }
             }
-            else
+            else if (!strcasecmp(argv[i], "-lightdata"))
             {
-                Usage();
+                if (i < argc)
+                {
+                    int             x = atoi(argv[++i]) * 1024;
+
+                    if (x > g_max_map_miptex)
+                    {
+                        g_max_map_miptex = x;
+                    }
+                }
+                else
+                {
+                    Usage();
+                }
             }
-        }
 
 #ifdef ZHLT_PROGRESSFILE // AJM
-        else if (!strcasecmp(argv[i], "-progressfile"))
-        {
-            if (i < argc)
+            else if (!strcasecmp(argv[i], "-progressfile"))
             {
-                g_progressfile = argv[++i];
+                if (i < argc)
+                {
+                    g_progressfile = argv[++i];
+                }
+                else
+                {
+                    Log("Error: -progressfile: expected path to progress file following parameter\n");
+                    Usage();
+                }
+            }
+#endif
+
+#ifdef HLVIS_MAXDIST
+            // AJM: MVD
+            else if(!strcasecmp(argv[i], "-maxdistance"))
+            {
+                if(i < argc)
+                {
+                    g_maxdistance = abs(atoi(argv[++i]));
+                }
+                else
+                {
+                    Usage();
+                }
+            }
+    /*		else if(!strcasecmp(argv[i], "-postcompile"))
+            {
+                g_postcompile = true;
+            }
+#endif
+
+            else if (argv[i][0] == '-')
+            {
+                Log("Unknown option \"%s\"", argv[i]);
+                Usage();
+            }
+            else if (!mapname_from_arg)
+            {
+                mapname_from_arg = argv[i];
             }
             else
             {
-            	Log("Error: -progressfile: expected path to progress file following parameter\n");
+                Log("Unknown option \"%s\"\n", argv[i]);
                 Usage();
             }
         }
-#endif
-        
-#ifdef HLVIS_MAXDIST
-        // AJM: MVD
-		else if(!strcasecmp(argv[i], "-maxdistance"))
-		{
-			if(i < argc)
-			{
-				g_maxdistance = abs(atoi(argv[++i]));
-			}
-			else
-			{
-				Usage();
-			}
-		}
-/*		else if(!strcasecmp(argv[i], "-postcompile"))
-		{
-			g_postcompile = true;
-		}*/
-#endif
 
-        else if (argv[i][0] == '-')
+#ifdef ZHLT_NETVIS
+        threads_InitCrit();
+
+        if (g_vismode == VIS_MODE_CLIENT)
         {
-            Log("Unknown option \"%s\"", argv[i]);
-            Usage();
+            ConnectToServer(g_server_addr, g_port);
+
+            while (!isConnectedToServer())
+            {
+                NetvisSleep(100);
+            }
+            Send_VIS_LOGIN();
+            while (!g_clientid)
+            {
+                if (!isConnectedToServer())
+                {
+                    Error("Unexepected disconnect from server(4)\n");
+                }
+                NetvisSleep(100);
+            }
+
+            mapname_from_arg = "proxy";
         }
-        else if (!mapname_from_arg)
+        else if (g_vismode == VIS_MODE_SERVER)
         {
-            mapname_from_arg = argv[i];
+            StartNetvisSocketServer(g_port);
+
+            if (!mapname_from_arg)
+            {
+                Log("No mapfile specified\n");
+                Usage();
+            }
         }
         else
         {
-            Log("Unknown option \"%s\"\n", argv[i]);
+            Log("Netvis must be run either as a server (-server)\n" "or as a client (-connect servername)\n\n");
             Usage();
         }
-    }
 
-#ifdef ZHLT_NETVIS
-    threads_InitCrit();
+#else
+        */
 
-    if (g_vismode == VIS_MODE_CLIENT)
-    {
-        ConnectToServer(g_server_addr, g_port);
-
-        while (!isConnectedToServer())
-        {
-            NetvisSleep(100);
-        }
-        Send_VIS_LOGIN();
-        while (!g_clientid)
-        {
-            if (!isConnectedToServer())
-            {
-                Error("Unexepected disconnect from server(4)\n");
-            }
-            NetvisSleep(100);
-        }
-
-        mapname_from_arg = "proxy";
-    }
-    else if (g_vismode == VIS_MODE_SERVER)
-    {
-        StartNetvisSocketServer(g_port);
+        mapname_from_arg = map;
 
         if (!mapname_from_arg)
         {
             Log("No mapfile specified\n");
             Usage();
         }
-    }
-    else
-    {
-        Log("Netvis must be run either as a server (-server)\n" "or as a client (-connect servername)\n\n");
-        Usage();
-    }
+//    #endif
 
-#else
+    #ifdef ZHLT_NETVIS
+        if (g_vismode == VIS_MODE_CLIENT)
+        {
+            g_log = false;
+        }
+    #endif
 
-    if (!mapname_from_arg)
-    {
-        Log("No mapfile specified\n");
-        Usage();
-    }
-#endif
+        safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
+        FlipSlashes(g_Mapname);
+        StripExtension(g_Mapname);
+        OpenLog(g_clientid);
+        //atexit(CloseLog);
+        ThreadSetDefault();
+        ThreadSetPriority(g_threadpriority);
+        LogStart(/*argc, argv*/);
 
-#ifdef ZHLT_NETVIS
-    if (g_vismode == VIS_MODE_CLIENT)
-    {
-        g_log = false;
-    }
-#endif
+    #ifdef ZHLT_NETVIS
+        if (g_vismode == VIS_MODE_CLIENT)
+        {
+            Log("ZHLT NETVIS Client #%d\n", g_clientid);
+            g_log = false;
+        }
+        else
+        {
+            Log("ZHLT NETVIS Server\n");
+        }
+    #endif
 
-    safe_strncpy(g_Mapname, mapname_from_arg, _MAX_PATH);
-    FlipSlashes(g_Mapname);
-    StripExtension(g_Mapname);
-    OpenLog(g_clientid);
-    atexit(CloseLog);
-    ThreadSetDefault();
-    ThreadSetPriority(g_threadpriority);
-    LogStart(/*argc, argv*/);
+        CheckForErrorLog();
 
-#ifdef ZHLT_NETVIS
-    if (g_vismode == VIS_MODE_CLIENT)
-    {
-        Log("ZHLT NETVIS Client #%d\n", g_clientid);
-        g_log = false;
-    }
-    else
-    {
-        Log("ZHLT NETVIS Server\n");
-    }
-#endif
+        dtexdata_init();
+        //atexit(dtexdata_free);
+        // END INIT
 
-    CheckForErrorLog();
+        // BEGIN VIS
+        start = I_FloatTime();
 
-    dtexdata_init();
-    atexit(dtexdata_free);
-    // END INIT
+        safe_strncpy(source, g_Mapname, _MAX_PATH);
+        safe_strncat(source, ".bsp", _MAX_PATH);
+        safe_strncpy(portalfile, g_Mapname, _MAX_PATH);
+        safe_strncat(portalfile, ".prt", _MAX_PATH);
 
-    // BEGIN VIS
-    start = I_FloatTime();
+    #ifdef ZHLT_NETVIS
 
-    safe_strncpy(source, g_Mapname, _MAX_PATH);
-    safe_strncat(source, ".bsp", _MAX_PATH);
-    safe_strncpy(portalfile, g_Mapname, _MAX_PATH);
-    safe_strncat(portalfile, ".prt", _MAX_PATH);
+        if (g_vismode == VIS_MODE_SERVER)
+        {
+            LoadBSPFile(source);
+            LoadPortalsByFilename(portalfile);
 
-#ifdef ZHLT_NETVIS
+            char* bsp_image;
+            char* prt_image;
 
-    if (g_vismode == VIS_MODE_SERVER)
-    {
+            g_bsp_size = LoadFile(source, &bsp_image);
+            g_prt_size = LoadFile(portalfile, &prt_image);
+
+            g_bsp_compressed_size = (g_bsp_size * 1.01) + 12; // Magic numbers come from zlib documentation
+            g_prt_compressed_size = (g_prt_size * 1.01) + 12; // Magic numbers come from zlib documentation
+
+            char* bsp_compressed_image = (char*)malloc(g_bsp_compressed_size);
+            char* prt_compressed_image = (char*)malloc(g_prt_compressed_size);
+
+            int rval;
+
+            rval = compress2((byte*)bsp_compressed_image, &g_bsp_compressed_size, (byte*)bsp_image, g_bsp_size, 5);
+            if (rval != Z_OK)
+            {
+                Error("zlib Compression error with bsp image\n");
+            }
+
+            rval =  compress2((byte*)prt_compressed_image, &g_prt_compressed_size, (byte*)prt_image, g_prt_size, 7);
+            if (rval != Z_OK)
+            {
+                Error("zlib Compression error with prt image\n");
+            }
+
+            free(bsp_image);
+            free(prt_image);
+
+            g_bsp_image = bsp_compressed_image;
+            g_prt_image = prt_compressed_image;
+        }
+        else if (g_vismode == VIS_MODE_CLIENT)
+        {
+            Send_VIS_WANT_BSP_DATA();
+            while (!g_bsp_downloaded)
+            {
+                if (!isConnectedToServer())
+                {
+                    Error("Unexepected disconnect from server(5)\n");
+                }
+                NetvisSleep(100);
+            }
+            Send_VIS_WANT_PRT_DATA();
+            while (!g_prt_downloaded)
+            {
+                if (!isConnectedToServer())
+                {
+                    Error("Unexepected disconnect from server(6)\n");
+                }
+                NetvisSleep(100);
+            }
+            LoadPortals(g_prt_image);
+            free(g_prt_image);
+        }
+
+    #else // NOT ZHLT_NETVIS
+
         LoadBSPFile(source);
+        ParseEntities();
         LoadPortalsByFilename(portalfile);
 
-        char* bsp_image;
-        char* prt_image;
+    #   if ZHLT_ZONES
+            g_Zones = MakeZones();
+            AssignPortalsToZones();
+    #   endif
 
-        g_bsp_size = LoadFile(source, &bsp_image);
-        g_prt_size = LoadFile(portalfile, &prt_image);
+    #endif
 
-        g_bsp_compressed_size = (g_bsp_size * 1.01) + 12; // Magic numbers come from zlib documentation
-        g_prt_compressed_size = (g_prt_size * 1.01) + 12; // Magic numbers come from zlib documentation
+        Settings();
+        g_uncompressed = (byte*)calloc(g_portalleafs, g_bitbytes);
 
-        char* bsp_compressed_image = (char*)malloc(g_bsp_compressed_size);
-        char* prt_compressed_image = (char*)malloc(g_prt_compressed_size);
+        CalcVis();
 
-        int rval;
+    #ifdef ZHLT_NETVIS
 
-        rval = compress2((byte*)bsp_compressed_image, &g_bsp_compressed_size, (byte*)bsp_image, g_bsp_size, 5);
-        if (rval != Z_OK)
+        if (g_vismode == VIS_MODE_SERVER)
         {
-            Error("zlib Compression error with bsp image\n");
-        }
+            g_visdatasize = vismap_p - g_dvisdata;
+            Log("g_visdatasize:%i  compressed from %i\n", g_visdatasize, originalvismapsize);
 
-        rval =  compress2((byte*)prt_compressed_image, &g_prt_compressed_size, (byte*)prt_image, g_prt_size, 7);
-        if (rval != Z_OK)
-        {
-            Error("zlib Compression error with prt image\n");
-        }
-
-        free(bsp_image);
-        free(prt_image);
-
-        g_bsp_image = bsp_compressed_image;
-        g_prt_image = prt_compressed_image;
-    }
-    else if (g_vismode == VIS_MODE_CLIENT)
-    {
-        Send_VIS_WANT_BSP_DATA();
-        while (!g_bsp_downloaded)
-        {
-            if (!isConnectedToServer())
+            if (g_chart)
             {
-                Error("Unexepected disconnect from server(5)\n");
+                PrintBSPFileSizes();
             }
-            NetvisSleep(100);
+
+            WriteBSPFile(source);
+
+            end = I_FloatTime();
+            LogTimeElapsed(end - start);
+
+            free(g_uncompressed);
+            // END VIS
+
+    #ifndef SYSTEM_WIN32
+            // Talk about cheese . . .
+            StopNetvisSocketServer();
+    #endif
+
         }
-        Send_VIS_WANT_PRT_DATA();
-        while (!g_prt_downloaded)
+        else if (g_vismode == VIS_MODE_CLIENT)
         {
-            if (!isConnectedToServer())
-            {
-                Error("Unexepected disconnect from server(6)\n");
-            }
-            NetvisSleep(100);
+
+    #ifndef SYSTEM_WIN32
+            // Dont ask  . .
+            DisconnectFromServer();
+    #endif
+
+            end = I_FloatTime();
+            LogTimeElapsed(end - start);
+
+            free(g_uncompressed);
+            // END VIS
         }
-        LoadPortals(g_prt_image);
-        free(g_prt_image);
-    }
+        threads_UninitCrit();
 
-#else // NOT ZHLT_NETVIS
+    #else // NOT ZHLT_NETVIS
 
-    LoadBSPFile(source);
-    ParseEntities();
-    LoadPortalsByFilename(portalfile);
-
-#   if ZHLT_ZONES
-        g_Zones = MakeZones();
-        AssignPortalsToZones();
-#   endif
-
-#endif
-
-    Settings();
-    g_uncompressed = (byte*)calloc(g_portalleafs, g_bitbytes);
-
-    CalcVis();
-
-#ifdef ZHLT_NETVIS
-
-    if (g_vismode == VIS_MODE_SERVER)
-    {
         g_visdatasize = vismap_p - g_dvisdata;
         Log("g_visdatasize:%i  compressed from %i\n", g_visdatasize, originalvismapsize);
 
@@ -1763,47 +1809,16 @@ int             main(const int argc, char** argv)
         free(g_uncompressed);
         // END VIS
 
-#ifndef SYSTEM_WIN32
-        // Talk about cheese . . .
-        StopNetvisSocketServer();
-#endif
+    #endif // ZHLT_NETVIS
 
+        CloseLog();
+        dtexdata_free();
+        return 0;
     }
-    else if (g_vismode == VIS_MODE_CLIENT)
+    catch (int error)
     {
-
-#ifndef SYSTEM_WIN32
-        // Dont ask  . . 
-        DisconnectFromServer();
-#endif
-
-        end = I_FloatTime();
-        LogTimeElapsed(end - start);
-
-        free(g_uncompressed);
-        // END VIS
+        CloseLog();
+        dtexdata_free();
+        return error;
     }
-    threads_UninitCrit();
-
-#else // NOT ZHLT_NETVIS
-
-    g_visdatasize = vismap_p - g_dvisdata;
-    Log("g_visdatasize:%i  compressed from %i\n", g_visdatasize, originalvismapsize);
-
-    if (g_chart)
-    {
-        PrintBSPFileSizes();
-    }
-
-    WriteBSPFile(source);
-
-    end = I_FloatTime();
-    LogTimeElapsed(end - start);
-
-    free(g_uncompressed);
-    // END VIS
-
-#endif // ZHLT_NETVIS
-
-    return 0;
 }
