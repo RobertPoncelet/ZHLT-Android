@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -100,27 +101,73 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // We just received the user-selected map file from the browser
-        // Now copy it to the local directory
         if (requestCode == PICK_FILE && resultCode == RESULT_OK) {
-            mapUri = data.getData();
-            TextView mapPathView = findViewById(R.id.mapPath);
-            mapPathView.setText(mapUri.getPath());
+            Uri uri = data.getData();
+            if (uri == null) {
+                return;
+            }
 
-            File in = new File(mapUri.getPath());
-            String[] strings = in.getName().split(":");
-            String fileName = strings[strings.length-1];
-            String filePath = getFilesDir().getPath() + File.separator + fileName;
+            String uriPath = uri.getPath();
+            String[] strings = uriPath.split("\\.");
+            switch (strings[strings.length-1]) {
+                case "json":
+                    try {
+                        Log.d(TAG, "Starting JSON parse");
+                        strings = uriPath.split(":");
+                        String fileName = strings[strings.length - 1];
+                        strings = fileName.split("\\.");
+                        fileName = strings[strings.length - 2];
+                        String dir;
+                        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                            dir = getExternalFilesDir(null).getPath();
+                        } else {
+                            dir = getFilesDir().getPath();
+                        }
+                        String filePath = dir + File.separator + fileName + ".map";
+                        JsonParser json = new JsonParser();
+                        boolean success = json.parse(getContentResolver().openInputStream(uri), new File(filePath));
+                        if (success) {
+                            Toast.makeText(getApplicationContext(), String.format("Written map to %s", filePath), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), String.format("Error parsing JSON", filePath), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (IOException e) {
+                        Log.d(TAG, String.format("IOException! %s", e.toString()));
+                        e.printStackTrace();
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        Log.d(TAG, String.format("ArrayIndexOutOfBoundsException! %s", e.toString()));
+                        e.printStackTrace();
+                    }
+                    break;
 
-            strings = fileName.split("\\.");
-            mapName = strings[strings.length-2];
+                case "map":
+                    Log.d(TAG, "Starting map compile");
+                    // We just received the user-selected map file from the browser
+                    // Now copy it to the local directory
+                    mapUri = uri;
+                    TextView mapPathView = findViewById(R.id.mapPath);
+                    mapPathView.setText(mapUri.getPath());
 
-            try {
-                InputStream inStream = getContentResolver().openInputStream(mapUri);
-                FileUtils.createFileFromInputStream(inStream, filePath);
-                localMapPath = filePath;
-            } catch (IOException e) {
-                mapPathView.setText(e.toString());
+                    File in = new File(mapUri.getPath());
+                    strings = in.getName().split(":");
+                    String fileName = strings[strings.length - 1];
+                    String filePath = getFilesDir().getPath() + File.separator + fileName;
+
+                    strings = fileName.split("\\.");
+                    mapName = strings[strings.length - 2];
+
+                    try {
+                        InputStream inStream = getContentResolver().openInputStream(mapUri);
+                        FileUtils.createFileFromInputStream(inStream, filePath);
+                        localMapPath = filePath;
+                    } catch (IOException e) {
+                        mapPathView.setText(e.toString());
+                    }
+                    break;
+
+                default:
+                    Log.d(TAG, "No result");
+                    break;
             }
         }
     }
