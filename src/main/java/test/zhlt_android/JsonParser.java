@@ -32,7 +32,7 @@ public class JsonParser {
             MapFile map = new MapFile();
             Entity world = new Entity("worldspawn");
             world.kvs.put("spawnflags", "0");
-            world.kvs.put("wad", "/data/user/0/test.zhlt_android/files/Q.wad");
+            world.kvs.put("wad", "/storage/emulated/0/Android/data/test.zhlt_android/files/Q.wad");
 
             JSONArray qubes = json.getJSONArray("qubes");
             for (int i = 0; i < qubes.length(); ++i) {
@@ -44,7 +44,11 @@ public class JsonParser {
 
             Entity player = new Entity("info_player_start");
             player.kvs.put("spawnflags", "0");
-            player.kvs.put("origin", "0 0 0");
+            JSONObject cam = json.getJSONObject("camera");
+            float x = (float)cam.getDouble("focus_x");
+            float y = (float)cam.getDouble("focus_z");
+            float z = (float)cam.getDouble("focus_y");
+            player.kvs.put("origin", String.format("%f %f %f", x, y, z));
 
             map.ents.add(player);
 
@@ -67,13 +71,13 @@ public class JsonParser {
 
     private Brush parseQube(JSONObject qube) throws JSONException {
         float px = (float)qube.getDouble("pos_x");
-        float py = (float)qube.getDouble("pos_y");
-        float pz = (float)qube.getDouble("pos_z");
+        float py = (float)qube.getDouble("pos_z");
+        float pz = (float)qube.getDouble("pos_y");
         Vector pos = new Vector(px, py, pz);
 
         float sx = (float)qube.getDouble("size_x");
-        float sy = (float)qube.getDouble("size_y");
-        float sz = (float)qube.getDouble("size_z");
+        float sy = (float)qube.getDouble("size_z");
+        float sz = (float)qube.getDouble("size_y");
         //Vector halfSize = new Vector(sx, sy, sz).times(0.5f);
 
         // Create 3D array
@@ -81,9 +85,9 @@ public class JsonParser {
         for (int i = 0; i < 2; ++i) {
             for (int j = 0; j < 2; ++j) {
                 for (int k = 0; k < 2; ++k) {
-                    float x = sx * 0.5f * (float)(i*2-1);
-                    float y = sy * 0.5f * (float)(j*2-1);
-                    float z = sz * 0.5f * (float)(k*2-1);
+                    float x = sx * (float)i;
+                    float y = sy * (float)j;
+                    float z = sz * (float)k;
 
                     Vector v = new Vector(x, y, z);
                     v = v.plus(pos);

@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final Button mapButton = findViewById(R.id.mapButton);
+        final Button mapButton = (Button)findViewById(R.id.mapButton);
         mapButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        final Button compileButton = findViewById(R.id.compileButton);
+        final Button compileButton = (Button)findViewById(R.id.compileButton);
         compileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Compile
@@ -58,15 +58,15 @@ public class MainActivity extends Activity {
                 if (code == 0) {
                     code = hlbspMain(localMapPath);
                 }
-                if (code == 0) {
+                /*if (code == 0) {
                     code = hlvisMain(localMapPath);
                 }
                 if (code == 0) {
                     hlradMain(localMapPath);
-                }
+                }*/
 
                 // Log
-                TextView log = findViewById(R.id.log);
+                TextView log = (TextView)findViewById(R.id.log);
                 String logString;
                 String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
                 try {
@@ -107,67 +107,55 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            String uriPath = uri.getPath();
-            String[] strings = uriPath.split("\\.");
-            switch (strings[strings.length-1]) {
-                case "json":
-                    try {
-                        Log.d(TAG, "Starting JSON parse");
-                        strings = uriPath.split(":");
-                        String fileName = strings[strings.length - 1];
-                        strings = fileName.split("\\.");
-                        fileName = strings[strings.length - 2];
-                        String dir;
-                        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                            dir = getExternalFilesDir(null).getPath();
-                        } else {
-                            dir = getFilesDir().getPath();
-                        }
-                        String filePath = dir + File.separator + fileName + ".map";
-                        JsonParser json = new JsonParser();
-                        boolean success = json.parse(getContentResolver().openInputStream(uri), new File(filePath));
-                        if (success) {
-                            Toast.makeText(getApplicationContext(), String.format("Written map to %s", filePath), Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getApplicationContext(), String.format("Error parsing JSON", filePath), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (IOException e) {
-                        Log.d(TAG, String.format("IOException! %s", e.toString()));
-                        e.printStackTrace();
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        Log.d(TAG, String.format("ArrayIndexOutOfBoundsException! %s", e.toString()));
-                        e.printStackTrace();
+            String fileName = "test";//FileUtils.getFileName(getApplicationContext(), uri); fuck
+            String mimeType = getContentResolver().getType(uri);
+            Log.d(TAG, String.format("Filename: %s, MIME type: %s", fileName, mimeType));
+            if (fileName != null && mimeType != null && mimeType.contains("json")) {
+                try {
+
+                    String dir;
+                    if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                        dir = getExternalFilesDir(null).getPath();
+                    } else {
+                        dir = getFilesDir().getPath();
                     }
-                    break;
-
-                case "map":
-                    Log.d(TAG, "Starting map compile");
-                    // We just received the user-selected map file from the browser
-                    // Now copy it to the local directory
-                    mapUri = uri;
-                    TextView mapPathView = findViewById(R.id.mapPath);
-                    mapPathView.setText(mapUri.getPath());
-
-                    File in = new File(mapUri.getPath());
-                    strings = in.getName().split(":");
-                    String fileName = strings[strings.length - 1];
-                    String filePath = getFilesDir().getPath() + File.separator + fileName;
-
-                    strings = fileName.split("\\.");
-                    mapName = strings[strings.length - 2];
-
-                    try {
-                        InputStream inStream = getContentResolver().openInputStream(mapUri);
-                        FileUtils.createFileFromInputStream(inStream, filePath);
-                        localMapPath = filePath;
-                    } catch (IOException e) {
-                        mapPathView.setText(e.toString());
+                    String filePath = dir + File.separator + fileName + ".map";
+                    JsonParser json = new JsonParser();
+                    File mapFile = new File(filePath);
+                    boolean success = json.parse(getContentResolver().openInputStream(uri), mapFile);
+                    if (success) {
+                        Toast.makeText(getApplicationContext(), String.format("Written map to %s", filePath), Toast.LENGTH_LONG).show();
+                        uri = Uri.fromFile(mapFile);
+                    } else {
+                        Toast.makeText(getApplicationContext(), String.format("Error parsing JSON: %s", filePath), Toast.LENGTH_LONG).show();
+                        return;
                     }
-                    break;
+                } catch (IOException e) {
+                    Log.d(TAG, String.format("IOException! %s", e.toString()));
+                    e.printStackTrace();
+                } catch (Exception e) {
+                    Log.d(TAG, String.format("Exception! %s", e.toString()));
+                    e.printStackTrace();
+                }
+            }
 
-                default:
-                    Log.d(TAG, "No result");
-                    break;
+            Log.d(TAG, "Preparing for map compile");
+            // We just received the user-selected map file from the browser
+            // Now copy it to the local directory
+            mapUri = uri;
+            TextView mapPathView = (TextView)findViewById(R.id.mapPath);
+            mapPathView.setText(mapUri.getPath());
+
+            String filePath = getFilesDir().getPath() + File.separator + fileName + ".map";
+
+            mapName = fileName;
+
+            try {
+                InputStream inStream = getContentResolver().openInputStream(mapUri);
+                FileUtils.createFileFromInputStream(inStream, filePath);
+                localMapPath = filePath;
+            } catch (IOException e) {
+                mapPathView.setText(e.toString());
             }
         }
     }

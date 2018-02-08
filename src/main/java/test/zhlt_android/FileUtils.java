@@ -1,5 +1,10 @@
 package test.zhlt_android;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,6 +20,27 @@ import java.nio.channels.FileChannel;
  */
 
 public class FileUtils {
+
+    public static String getFileName(Context context, Uri uri) {
+        String scheme = uri.getScheme();
+        String fileName = null;
+        if (scheme.equals("file")) {
+            fileName = uri.getLastPathSegment();
+        }
+        else if (scheme.equals("content")) {
+            String[] proj = { MediaStore.Images.Media.TITLE };
+            Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null);
+            if (cursor != null && cursor.getCount() != 0) {
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.TITLE);
+                cursor.moveToFirst();
+                fileName = cursor.getString(columnIndex);
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return fileName;
+    }
 
     public static String convertStreamToString(InputStream is) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
