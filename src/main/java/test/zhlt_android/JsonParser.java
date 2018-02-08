@@ -46,7 +46,7 @@ public class JsonParser {
             player.kvs.put("spawnflags", "0");
             JSONObject cam = json.getJSONObject("camera");
             float x = (float)cam.getDouble("focus_x");
-            float y = (float)cam.getDouble("focus_z");
+            float y = -(float)cam.getDouble("focus_z");
             float z = (float)cam.getDouble("focus_y");
             player.kvs.put("origin", String.format("%f %f %f", x, y, z));
 
@@ -71,14 +71,24 @@ public class JsonParser {
 
     private Brush parseQube(JSONObject qube) throws JSONException {
         float px = (float)qube.getDouble("pos_x");
-        float py = (float)qube.getDouble("pos_z");
+        float py = -(float)qube.getDouble("pos_z");
         float pz = (float)qube.getDouble("pos_y");
         Vector pos = new Vector(px, py, pz);
 
         float sx = (float)qube.getDouble("size_x");
-        float sy = (float)qube.getDouble("size_z");
+        float sy = -(float)qube.getDouble("size_z");
         float sz = (float)qube.getDouble("size_y");
         //Vector halfSize = new Vector(sx, sy, sz).times(0.5f);
+
+        String texName;
+        switch(qube.getInt("colour")) {
+            case 1677215:
+                texName = "out_wall1a";
+                break;
+            default:
+                texName = "mmetal1_2";
+                break;
+        }
 
         // Create 3D array
         Vector verts[][][] = new Vector[2][2][2];
@@ -100,23 +110,23 @@ public class JsonParser {
         Vector defV = new Vector(0f, -1f, 0f, 0f);
         List<Face> faces = new ArrayList<Face>();
 
-        Vector bottomVerts[] = new Vector[] { verts[0][1][0], verts[0][0][0], verts[1][0][0] };
-        faces.add(new Face(bottomVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector bottomVerts[] = new Vector[] { verts[0][1][0], verts[1][0][0], verts[0][0][0] };
+        faces.add(new Face(bottomVerts, texName, defU, defV, 0f, 1f, 1f));
 
-        Vector topVerts[] = new Vector[] { verts[1][0][1], verts[0][0][1], verts[0][1][1] };
-        faces.add(new Face(topVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector topVerts[] = new Vector[] { verts[1][0][1], verts[0][1][1], verts[0][0][1] };
+        faces.add(new Face(topVerts, texName, defU, defV, 0f, 1f, 1f));
 
-        Vector leftVerts[] = new Vector[] { verts[0][1][1], verts[0][1][0], verts[1][1][0] };
-        faces.add(new Face(leftVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector leftVerts[] = new Vector[] { verts[1][0][0], verts[1][1][0], verts[1][0][1] };
+        faces.add(new Face(leftVerts, texName, defU, defV, 0f, 1f, 1f));
 
-        Vector rightVerts[] = new Vector[] { verts[1][0][0], verts[0][0][0], verts[0][0][1] };
-        faces.add(new Face(rightVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector rightVerts[] = new Vector[] { verts[0][0][0], verts[0][0][1], verts[0][1][0] };
+        faces.add(new Face(rightVerts, texName, defU, defV, 0f, 1f, 1f));
 
-        Vector frontVerts[] = new Vector[] { verts[1][1][0], verts[1][0][0], verts[1][0][1] };
-        faces.add(new Face(frontVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector frontVerts[] = new Vector[] { verts[1][1][0], verts[0][1][0], verts[0][1][1] };
+        faces.add(new Face(frontVerts, texName, defU, defV, 0f, 1f, 1f));
 
-        Vector backVerts[] = new Vector[] { verts[0][0][1], verts[0][0][0], verts[0][1][0] };
-        faces.add(new Face(backVerts, "mmetal1_2", defU, defV, 0f, 1f, 1f));
+        Vector backVerts[] = new Vector[] { verts[0][0][0], verts[1][0][0], verts[1][0][1] };
+        faces.add(new Face(backVerts, texName, defU, defV, 0f, 1f, 1f));
 
         return new Brush(faces);
     }
