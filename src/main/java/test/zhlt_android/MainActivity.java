@@ -8,7 +8,6 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +24,7 @@ public class MainActivity extends Activity {
     public static final String TAG = "ZHLT-Android";
 
     private Uri mapUri = null;
+    private Uri xashUri = null;
     private String localMapPath = "<ERROR>";
     private String mapName = "<ERROR>";
 
@@ -37,6 +37,15 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final Button xashButton = (Button)findViewById(R.id.xashButton);
+        xashButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                i.addCategory(Intent.CATEGORY_DEFAULT);
+                startActivityForResult(Intent.createChooser(i, "Choose Xash3D \"valve\" folder"), 9999);
+            }
+        });
 
         final Button mapButton = (Button)findViewById(R.id.mapButton);
         mapButton.setOnClickListener(new View.OnClickListener() {
@@ -52,47 +61,71 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 // Compile
                 TextView tv = (TextView) findViewById(R.id.sample_text);
-                Log.d("ZHLT-Android", "==================== STARTED ====================");
 
-                int code = hlcsgMain(localMapPath);
-                if (code == 0) {
-                    code = hlbspMain(localMapPath);
-                }
-                /*if (code == 0) {
-                    code = hlvisMain(localMapPath);
-                }
-                if (code == 0) {
-                    hlradMain(localMapPath);
-                }*/
+                if (xashUri != null) {
+                    Log.d("ZHLT-Android", "==================== STARTED ====================");
 
-                // Log
-                TextView log = (TextView)findViewById(R.id.log);
-                String logString;
-                String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
-                try {
-                    logString = FileUtils.getStringFromFile(logPath);
-                    log.setText(logString);
-                } catch (Exception e) {
-                    log.setText("Could not open log file " + logPath);
-                    e.printStackTrace();
-                }
-
-                // Copy resulting BSP
-                try {
-                    if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                        String localBspPath = getFilesDir().getPath() + File.separator + mapName + ".bsp";
-                        File localBsp = new File(localBspPath);
-
-                        File storage = getExternalFilesDir(null);
-                        String bspPath = storage.getPath() + File.separator + mapName + ".bsp";
-
-                        tv.setText(bspPath);
-                        FileUtils.createFileFromInputStream(new FileInputStream(localBsp), bspPath);
-                    } else {
-                        tv.setText("External storage unavailable");
+                    int code = hlcsgMain(localMapPath);
+                    if (code == 0) {
+                        code = hlbspMain(localMapPath);
                     }
-                } catch (IOException e) {
-                    tv.setText(e.toString());
+                    /*if (code == 0) {
+                        code = hlvisMain(localMapPath);
+                    }
+                    if (code == 0) {
+                        hlradMain(localMapPath);
+                    }*/
+
+                    // Log
+                    TextView log = (TextView)findViewById(R.id.log);
+                    String logString;
+                    String logPath = getFilesDir().getPath() + File.separator + mapName + ".log";
+                    try {
+                        logString = FileUtils.getStringFromFile(logPath);
+                        log.setText(logString);
+                    } catch (Exception e) {
+                        log.setText("Could not open log file " + logPath);
+                        e.printStackTrace();
+                    }
+
+                    // Copy resulting BSP
+                    try {
+                        String localBspPath = getFilesDir().getPath() + File.separator + mapName + ".bsp";
+                        FileInputStream localBspStream = new FileInputStream(new File(localBspPath));
+                        Log.d(TAG, String.format("Local BSP: %s", localBspPath));
+
+                        String bspPath = getExternalFilesDir(null).getPath() + File.separator + mapName + ".bsp";
+                        FileUtils.createFileFromInputStream(localBspStream, bspPath);
+
+                        // Also copy it to the Xash maps folder if possible
+                        File xashDir = new File(xashUri.getPath());
+                        File dirs[] = xashDir.listFiles();
+                        File mapsDir = null;
+                        boolean success = false;
+                        if (dirs != null) {
+                            for (File dir : dirs) {
+                                if (dir.getPath().contains("maps")) {
+                                    mapsDir = dir;
+                                    break;
+                                }
+                            }
+                            if (mapsDir != null) {
+                                String xashBspPath = mapsDir.getPath() + File.separator + mapName + ".bsp";
+                                if (FileUtils.createFileFromInputStream(localBspStream, xashBspPath) != null) {
+                                    tv.setText(bspPath);
+                                    success = true;
+                                }
+                            }
+                        }
+
+                        if (!success) {
+                            Toast.makeText(getApplicationContext(), "Couldn't copy to Xash folder", Toast.LENGTH_LONG).show();
+                        }
+                    } catch (IOException e) {
+                        tv.setText(e.toString());
+                    }
+                } else {
+                    tv.setText("Set your Xash3D path first!");
                 }
             }
         });
@@ -107,7 +140,7 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            String fileName = "test";//FileUtils.getFileName(getApplicationContext(), uri); fuck
+            String fileName = "test";//FileUtils.getFileName(getApplicationContext(), uri); FIX ME
             String mimeType = getContentResolver().getType(uri);
             Log.d(TAG, String.format("Filename: %s, MIME type: %s", fileName, mimeType));
             if (fileName != null && mimeType != null && mimeType.contains("json")) {
@@ -157,6 +190,13 @@ public class MainActivity extends Activity {
             } catch (IOException e) {
                 mapPathView.setText(e.toString());
             }
+        } else if (requestCode == 9999) {
+            xashUri = data.getData();
+            if (xashUri == null) {
+                return;
+            }
+            TextView xashPathView = (TextView)findViewById(R.id.xashPath);
+            xashPathView.setText(xashUri.getPath());
         }
     }
 

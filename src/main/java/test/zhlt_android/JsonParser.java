@@ -32,7 +32,7 @@ public class JsonParser {
             MapFile map = new MapFile();
             Entity world = new Entity("worldspawn");
             world.kvs.put("spawnflags", "0");
-            world.kvs.put("wad", "/storage/emulated/0/Android/data/test.zhlt_android/files/Q.wad");
+            world.kvs.put("wad", "/storage/9C33-6BBD/Android/data/test.zhlt_android/files/halflife.wad");
 
             JSONArray qubes = json.getJSONArray("qubes");
             for (int i = 0; i < qubes.length(); ++i) {
@@ -70,6 +70,8 @@ public class JsonParser {
     }
 
     private Brush parseQube(JSONObject qube) throws JSONException {
+        // Qubism uses Y as the up axis, while HL uses Z
+        // Because of this, we need to swap them and invert Y
         float px = (float)qube.getDouble("pos_x");
         float py = -(float)qube.getDouble("pos_z");
         float pz = (float)qube.getDouble("pos_y");
@@ -82,8 +84,17 @@ public class JsonParser {
 
         String texName;
         switch(qube.getInt("colour")) {
-            case 1677215:
-                texName = "out_wall1a";
+            case 0x282828: // dark grey
+                texName = "black";
+                break;
+            case 0x0000FF: // blue
+                texName = "SKY";
+                break;
+            case 0xFFFFFF: // white
+                texName = "OUT_WALL1A";
+                break;
+            case 0xFF0000: // red
+                texName = "BASEWALL01A";
                 break;
             default:
                 texName = "mmetal1_2";

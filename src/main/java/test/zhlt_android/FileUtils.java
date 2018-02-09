@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,6 +15,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+
+import static test.zhlt_android.MainActivity.TAG;
 
 /**
  * Created by robert.poncelet on 29/01/18.
@@ -73,21 +76,24 @@ public class FileUtils {
     }
 
     public static File createFileFromInputStream(InputStream inputStream, String fileName) {
-        try{
+        try {
             File f = new File(fileName);
-            f.setWritable(true, false);
-            OutputStream outputStream = new FileOutputStream(f);
-            byte buffer[] = new byte[1024];
-            int length;
+            if (f.setWritable(true, false)) {
+                OutputStream outputStream = new FileOutputStream(f);
+                byte buffer[] = new byte[1024];
+                int length;
 
-            while((length=inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer,0,length);
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                return f;
+            } else {
+                Log.d(TAG, String.format("Error! No writable permissions for %s", fileName));
             }
-
-            outputStream.close();
-            inputStream.close();
-
-            return f;
         } catch (IOException e) {
             e.printStackTrace();
         }
