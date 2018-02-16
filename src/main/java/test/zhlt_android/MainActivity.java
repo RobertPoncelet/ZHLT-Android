@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,10 +22,9 @@ import test.zhlt_android.FileUtils;
 public class MainActivity extends Activity {
 
     public static final int PICK_FILE = 1;
+    public static final int PICK_DIR = 2;
     public static final String TAG = "ZHLT-Android";
 
-    private Uri mapUri = null;
-    private Uri xashUri = null;
     private String localMapPath = "<ERROR>";
     private String mapName = "<ERROR>";
 
@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
                 i.addCategory(Intent.CATEGORY_DEFAULT);
-                startActivityForResult(Intent.createChooser(i, "Choose Xash3D \"valve\" folder"), 9999);
+                startActivityForResult(Intent.createChooser(i, "Choose Xash3D folder (\".../in.celest.xash3d.hl/xash\")"), PICK_DIR);
             }
         });
 
@@ -60,9 +60,12 @@ public class MainActivity extends Activity {
         compileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Compile
-                TextView tv = (TextView) findViewById(R.id.sample_text);
 
-                if (xashUri != null) {
+                EditText xashDirView = findViewById(R.id.xashPath);
+                String mapsDir = xashDirView.getText().toString() + File.separator + "valve" + File.separator + "maps";
+                File maps = new File(mapsDir);
+
+                if (maps.isDirectory()) {
                     Log.d("ZHLT-Android", "==================== STARTED ====================");
 
                     int code = hlcsgMain(localMapPath);
@@ -91,52 +94,46 @@ public class MainActivity extends Activity {
                     // Copy resulting BSP
                     try {
                         String localBspPath = getFilesDir().getPath() + File.separator + mapName + ".bsp";
-                        FileInputStream localBspStream = new FileInputStream(new File(localBspPath));
+                        File localBsp = new File(localBspPath);
                         Log.d(TAG, String.format("Local BSP: %s", localBspPath));
 
                         String bspPath = getExternalFilesDir(null).getPath() + File.separator + mapName + ".bsp";
-                        FileUtils.createFileFromInputStream(localBspStream, bspPath);
-
-                        // Also copy it to the Xash maps folder if possible
-                        File xashDir = new File(xashUri.getPath());
-                        File dirs[] = xashDir.listFiles();
-                        File mapsDir = null;
-                        boolean success = false;
-                        if (dirs != null) {
-                            for (File dir : dirs) {
-                                if (dir.getPath().contains("maps")) {
-                                    mapsDir = dir;
-                                    break;
-                                }
-                            }
-                            if (mapsDir != null) {
-                                String xashBspPath = mapsDir.getPath() + File.separator + mapName + ".bsp";
-                                if (FileUtils.createFileFromInputStream(localBspStream, xashBspPath) != null) {
-                                    tv.setText(bspPath);
-                                    success = true;
-                                }
-                            }
+                        Log.d(TAG, String.format("BSP: %s", bspPath));
+                        FileInputStream localBspStream = new FileInputStream(localBsp);
+                        File fudge = FileUtils.createFileFromInputStream(localBspStream, bspPath);
+                        if (fudge == null) {
+                            Log.d(TAG, String.format("Default BSP copy failed: %s", bspPath));
                         }
 
-                        if (!success) {
-                            Toast.makeText(getApplicationContext(), "Couldn't copy to Xash folder", Toast.LENGTH_LONG).show();
+                        String xashBspPath = mapsDir + File.separator + mapName + ".bsp";
+                        Log.d(TAG, String.format("Xash BSP: %s", xashBspPath));
+                        FileInputStream localBspStream2 = new FileInputStream(localBsp);
+                        fudge = FileUtils.createFileFromInputStream(localBspStream2, xashBspPath);
+                        if (fudge == null) {
+                            Toast.makeText(getApplicationContext(), "Couldn't copy to " + xashBspPath, Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Compile and copy completed successfully" + xashBspPath, Toast.LENGTH_LONG).show();
                         }
+
                     } catch (IOException e) {
-                        tv.setText(e.toString());
+                        Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    tv.setText("Set your Xash3D path first!");
+                    Toast.makeText(getApplicationContext(), mapsDir + " is an invalid Xash3D path!", Toast.LENGTH_LONG).show();
                 }
             }
         });
 
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
-        Uri uri = (Uri)bundle.get(Intent.EXTRA_STREAM);
+        Uri uri = null;
+        if (bundle != null) {
+            uri = (Uri) bundle.get(Intent.EXTRA_STREAM);
+        }
         if (uri != null) {
             handleUri(uri);
         } else {
-            Log.d(TAG, String.format("No URI from intent: " + intent.toString()));
+            Log.d(TAG, "No URI from intent: " + intent.toString());
         }
     }
 
@@ -150,8 +147,8 @@ public class MainActivity extends Activity {
                 return;
             }
             handleUri(uri);
-        } else if (requestCode == 9999) {
-            xashUri = data.getData();
+        } else if (requestCode == PICK_DIR && resultCode == RESULT_OK) {
+            Uri xashUri = data.getData();
             if (xashUri == null) {
                 return;
             }
@@ -196,16 +193,15 @@ public class MainActivity extends Activity {
         Log.d(TAG, "Preparing for map compile");
         // We just received the user-selected map file from the browser
         // Now copy it to the local directory
-        mapUri = uri;
         TextView mapPathView = (TextView)findViewById(R.id.mapPath);
-        mapPathView.setText(mapUri.getPath());
+        mapPathView.setText(uri.getPath());
 
         String filePath = getFilesDir().getPath() + File.separator + fileName + ".map";
 
         mapName = fileName;
 
         try {
-            InputStream inStream = getContentResolver().openInputStream(mapUri);
+            InputStream inStream = getContentResolver().openInputStream(uri);
             FileUtils.createFileFromInputStream(inStream, filePath);
             localMapPath = filePath;
         } catch (IOException e) {

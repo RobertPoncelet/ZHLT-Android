@@ -26,25 +26,16 @@
                 android:layout_weight="1"
                 android:text="Select Xash3D Folder" />
 
-            <HorizontalScrollView
+            <EditText
+                android:id="@+id/xashPath"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="4">
+                android:layout_weight="4"
+                android:ems="10"
+                android:inputType="text|textUri"
+                android:text="in.celest.xash3d.hl/xash"
+                android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/xashPath"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text='"valve"'
-                        android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
-                </LinearLayout>
-            </HorizontalScrollView>
         </LinearLayout>
 
         <LinearLayout
@@ -91,16 +82,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Compile" />
-
-        <TextView
-            android:id="@+id/sample_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Hello World!"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <ScrollView
             android:layout_width="match_parent"

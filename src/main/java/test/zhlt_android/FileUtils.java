@@ -78,7 +78,7 @@ public class FileUtils {
     public static File createFileFromInputStream(InputStream inputStream, String fileName) {
         try {
             File f = new File(fileName);
-            if (f.setWritable(true, false)) {
+            if (f.setWritable(true, true)) {
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length;
@@ -95,6 +95,7 @@ public class FileUtils {
                 Log.d(TAG, String.format("Error! No writable permissions for %s", fileName));
             }
         } catch (IOException e) {
+            Log.d(TAG, e.toString());
             e.printStackTrace();
         }
         return null;

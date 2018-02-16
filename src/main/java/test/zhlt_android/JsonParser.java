@@ -87,17 +87,20 @@ public class JsonParser {
             case 0x282828: // dark grey
                 texName = "black";
                 break;
-            case 0x0000FF: // blue
-                texName = "SKY";
-                break;
             case 0xFFFFFF: // white
                 texName = "OUT_WALL1A";
                 break;
             case 0xFF0000: // red
                 texName = "BASEWALL01A";
                 break;
+            case 0x00FF00: // green
+                texName = "OUT_DIRT1";
+                break;
+            case 0x0000FF: // blue
+                texName = "SKY";
+                break;
             default:
-                texName = "mmetal1_2";
+                texName = "LAB1_FLOOR1";
                 break;
         }
 
