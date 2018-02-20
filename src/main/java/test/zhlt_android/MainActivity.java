@@ -1,10 +1,14 @@
 package test.zhlt_android;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -56,13 +60,40 @@ public class MainActivity extends Activity {
             }
         });
 
+        final EditText xashPath = findViewById(R.id.xashPath);
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        String mapsPath = sharedPref.getString("xashPath", "in.celest.xash3d.hl/xash/valve/maps");
+        xashPath.setText(mapsPath);
+
+        TextWatcher textWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String mapsPath = xashPath.getText().toString();
+
+                SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putString("xashPath", mapsPath);
+                editor.apply();
+            }
+        };
+
+        xashPath.addTextChangedListener(textWatcher);
+
         final Button compileButton = (Button)findViewById(R.id.compileButton);
         compileButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Compile
 
                 EditText xashDirView = findViewById(R.id.xashPath);
-                String mapsDir = xashDirView.getText().toString() + File.separator + "valve" + File.separator + "maps";
+                String mapsDir = xashDirView.getText().toString();
                 File maps = new File(mapsDir);
 
                 if (maps.isDirectory()) {

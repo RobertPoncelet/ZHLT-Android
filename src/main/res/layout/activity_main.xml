@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Select Xash3D Folder" />
+                android:text="Set Xash3D Maps Folder" />
 
             <EditText
                 android:id="@+id/xashPath"
@@ -33,7 +33,7 @@
                 android:layout_weight="4"
                 android:ems="10"
                 android:inputType="text|textUri"
-                android:text="in.celest.xash3d.hl/xash"
+                android:text="in.celest.xash3d.hl/xash/valve/maps"
                 android:textAppearance="@android:style/TextAppearance.DeviceDefault" />
 
         </LinearLayout>
