@@ -4,6 +4,7 @@ package test.zhlt_android;
  * Created by robert.poncelet on 29/01/18.
  */
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -12,6 +13,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -21,7 +23,12 @@ import test.zhlt_android.FileUtils;
 import test.zhlt_android.MapFile;
 
 public class JsonParser {
+    private Context context;
     public static final String TAG = "ZHLT-Android";
+
+    public JsonParser(Context ctx) {
+        context = ctx;
+    }
 
     public boolean parse(InputStream jsonStream, File outFile) {
         try {
@@ -36,8 +43,8 @@ public class JsonParser {
 
             JSONArray qubes = json.getJSONArray("qubes");
             for (int i = 0; i < qubes.length(); ++i) {
-                Brush qube = parseQube(qubes.getJSONObject(i));
-                world.brushes.add(qube);
+                ArrayList<Brush> brushes = parseQube(qubes.getJSONObject(i));
+                world.brushes.addAll(brushes);
             }
 
             map.ents.add(world);
@@ -69,7 +76,7 @@ public class JsonParser {
         }
     }
 
-    private Brush parseQube(JSONObject qube) throws JSONException {
+    private ArrayList<Brush> parseQube(JSONObject qube) throws JSONException {
         // Qubism uses Y as the up axis, while HL uses Z
         // Because of this, we need to swap them and invert Y
         float px = (float)qube.getDouble("pos_x");
@@ -143,5 +150,18 @@ public class JsonParser {
         faces.add(new Face(backVerts, texName, defU, defV, 0f, 1f, 1f));
 
         return new Brush(faces);
+    }
+
+    JSONObject brushAsset(int shape) {
+        String fileName = "shapes/qube" + String.valueOf(shape) + ".json";
+        try {
+            InputStream stream = context.getAssets().open(fileName);
+            String jsonString = FileUtils.convertStreamToString(stream);
+            return new JSONObject(jsonString);
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+            e.printStackTrace();
+            return null;
+        }
     }
 }

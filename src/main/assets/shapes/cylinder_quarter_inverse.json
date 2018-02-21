@@ -1,0 +1,392 @@
+{
+    "brushes": [
+        {
+            "faces": [
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            128.0, 
+                            256.0, 
+                            222.0
+                        ], 
+                        [
+                            222.0, 
+                            256.0, 
+                            128.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            128.0, 
+                            256.0, 
+                            222.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            222.0, 
+                            256.0, 
+                            128.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }
+            ]
+        }, 
+        {
+            "faces": [
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            0.0, 
+                            256.0, 
+                            256.0
+                        ], 
+                        [
+                            128.0, 
+                            256.0, 
+                            222.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            0.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            0.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            128.0, 
+                            0.0, 
+                            222.0
+                        ], 
+                        [
+                            128.0, 
+                            256.0, 
+                            222.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }
+            ]
+        }, 
+        {
+            "faces": [
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            222.0, 
+                            256.0, 
+                            128.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            0.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            256.0, 
+                            0.0, 
+                            -0.0
+                        ], 
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            256.0, 
+                            0.0, 
+                            -0.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            256.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            256.0, 
+                            0.0, 
+                            256.0
+                        ], 
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            222.0, 
+                            256.0, 
+                            128.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }, 
+                {
+                    "texName": null, 
+                    "scaleX": 1.0, 
+                    "scaleY": 1.0, 
+                    "points": [
+                        [
+                            222.0, 
+                            0.0, 
+                            128.0
+                        ], 
+                        [
+                            256.0, 
+                            0.0, 
+                            -0.0
+                        ], 
+                        [
+                            256.0, 
+                            256.0, 
+                            0.0
+                        ]
+                    ], 
+                    "vAxis": null, 
+                    "rotation": 0.0, 
+                    "uAxis": null
+                }
+            ]
+        }
+    ], 
+    "kvs": {}
+}
