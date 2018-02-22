@@ -202,7 +202,7 @@ public class MainActivity extends Activity {
                     dir = getFilesDir().getPath();
                 }
                 String filePath = dir + File.separator + fileName + ".map";
-                JsonParser json = new JsonParser();
+                JsonParser json = new JsonParser(getApplicationContext());
                 File mapFile = new File(filePath);
                 boolean success = json.parse(getContentResolver().openInputStream(uri), mapFile);
                 if (success) {

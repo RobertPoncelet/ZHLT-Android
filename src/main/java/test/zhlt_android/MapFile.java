@@ -133,7 +133,7 @@ class Vector {
 
     public void out(PrintStream p) {
         for (int i = 0; i < v.length; ++i) {
-            p.print(String.valueOf((int)v[i]));
+            p.print(String.valueOf((int)(v[i] + 0.5f)));
             if (i != v.length - 1) {
                 p.print(" ");
             }
@@ -164,5 +164,17 @@ class Vector {
             a.v[i] *= b;
         }
         return a;
+    }
+
+    public Vector cross(Vector b) {
+        Vector a = this;
+        return new Vector(a.v[1] * b.v[2] - a.v[2] * b.v[1],
+                          a.v[2] * b.v[0] - a.v[0] * b.v[2],
+                          a.v[0] * b.v[1] - a.v[1] * b.v[0]);
+    }
+
+    public float dot(Vector b) {
+        Vector a = this;
+        return a.v[0]*b.v[0] + a.v[1]*b.v[1] + a.v[2]*b.v[2];
     }
 }

@@ -13,14 +13,10 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import test.zhlt_android.FileUtils;
-import test.zhlt_android.MapFile;
 
 public class JsonParser {
     private Context context;
@@ -44,7 +40,9 @@ public class JsonParser {
             JSONArray qubes = json.getJSONArray("qubes");
             for (int i = 0; i < qubes.length(); ++i) {
                 ArrayList<Brush> brushes = parseQube(qubes.getJSONObject(i));
-                world.brushes.addAll(brushes);
+                if (brushes != null) {
+                    world.brushes.addAll(brushes);
+                }
             }
 
             map.ents.add(world);
@@ -79,15 +77,15 @@ public class JsonParser {
     private ArrayList<Brush> parseQube(JSONObject qube) throws JSONException {
         // Qubism uses Y as the up axis, while HL uses Z
         // Because of this, we need to swap them and invert Y
-        float px = (float)qube.getDouble("pos_x");
-        float py = -(float)qube.getDouble("pos_z");
-        float pz = (float)qube.getDouble("pos_y");
-        Vector pos = new Vector(px, py, pz);
+        float ax = (float)qube.getDouble("pos_x");
+        float ay = -(float)qube.getDouble("pos_z");
+        float az = (float)qube.getDouble("pos_y");
+        Vector pos = new Vector(ax, ay, az);
 
-        float sx = (float)qube.getDouble("size_x");
-        float sy = -(float)qube.getDouble("size_z");
-        float sz = (float)qube.getDouble("size_y");
-        //Vector halfSize = new Vector(sx, sy, sz).times(0.5f);
+        float bx = (float)qube.getDouble("size_x");
+        float by = -(float)qube.getDouble("size_z");
+        float bz = (float)qube.getDouble("size_y");
+        Vector size = new Vector(bx, by, bz);
 
         String texName;
         switch(qube.getInt("colour")) {
@@ -111,49 +109,97 @@ public class JsonParser {
                 break;
         }
 
-        // Create 3D array
-        Vector verts[][][] = new Vector[2][2][2];
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                for (int k = 0; k < 2; ++k) {
-                    float x = sx * (float)i;
-                    float y = sy * (float)j;
-                    float z = sz * (float)k;
-
-                    Vector v = new Vector(x, y, z);
-                    v = v.plus(pos);
-                    verts[i][j][k] = v;
-                }
-            }
-        }
-
         Vector defU = new Vector(1f, 0f, 0f, 0f);
         Vector defV = new Vector(0f, -1f, 0f, 0f);
-        List<Face> faces = new ArrayList<Face>();
 
-        Vector bottomVerts[] = new Vector[] { verts[0][1][0], verts[1][0][0], verts[0][0][0] };
-        faces.add(new Face(bottomVerts, texName, defU, defV, 0f, 1f, 1f));
+        int shape = qube.getInt("shape");
+        JSONObject jqube = jsonShape(shape);
+        if (jqube == null) {
+            return null;
+        }
+        JSONArray jbrushes = jqube.getJSONArray("brushes");
+        ArrayList<Brush> brushes = new ArrayList<>();
 
-        Vector topVerts[] = new Vector[] { verts[1][0][1], verts[0][1][1], verts[0][0][1] };
-        faces.add(new Face(topVerts, texName, defU, defV, 0f, 1f, 1f));
+        for (int i = 0; i < jbrushes.length(); ++i) {
+            JSONObject jbrush = jbrushes.getJSONObject(i);
+            JSONArray jfaces = jbrush.getJSONArray("faces");
+            List<Face> faces = new ArrayList<Face>();
 
-        Vector leftVerts[] = new Vector[] { verts[1][0][0], verts[1][1][0], verts[1][0][1] };
-        faces.add(new Face(leftVerts, texName, defU, defV, 0f, 1f, 1f));
+            for (int j = 0; j < jfaces.length(); ++j) {
+                JSONObject jface = jfaces.getJSONObject(j);
+                JSONArray jpoints = jface.getJSONArray("points");
+                Vector points[] = new Vector[3];
 
-        Vector rightVerts[] = new Vector[] { verts[0][0][0], verts[0][0][1], verts[0][1][0] };
-        faces.add(new Face(rightVerts, texName, defU, defV, 0f, 1f, 1f));
+                for (int k = 0; k < 3; ++k) {
+                    JSONArray jv = jpoints.getJSONArray(k);
+                    // As above, swap Y and Z and invert Y
+                    float tx =  (float)jv.getDouble(0);
+                    float ty = -(float)jv.getDouble(2);
+                    float tz =  (float)jv.getDouble(1);
+                    if (shape > 255) {
+                        tx /= 256.0f;
+                        ty /= 256.0f;
+                        tz /= 256.0f;
+                    }
+                    float x = ax + tx * bx;
+                    float y = ay + ty * by;
+                    float z = az + tz * bz;
+                    points[k] = new Vector(x, y, z);
+                }
 
-        Vector frontVerts[] = new Vector[] { verts[1][1][0], verts[0][1][0], verts[0][1][1] };
-        faces.add(new Face(frontVerts, texName, defU, defV, 0f, 1f, 1f));
+                // TODO: this shouldn't be done in code, I should edit the assets instead
+                /*Vector a = points[0].minus(points[1]);
+                Vector b = points[2].minus(points[1]);
+                Vector normal = a.cross(b);
+                Vector centre = pos.plus(size.times(0.5f));
+                Vector outwards = points[1].minus(centre);
+                if (outwards.dot(normal) < 0f) {
+                    Vector temp = new Vector(points[0]);
+                    points[0] = points[1];
+                    points[1] = points[2];
+                    points[2] = temp;
+                }*/
 
-        Vector backVerts[] = new Vector[] { verts[0][0][0], verts[1][0][0], verts[1][0][1] };
-        faces.add(new Face(backVerts, texName, defU, defV, 0f, 1f, 1f));
+                faces.add(new Face(points, texName, defU, defV, 0f, 1f, 1f));
+            }
 
-        return new Brush(faces);
+            brushes.add(new Brush(faces));
+        }
+
+        return brushes;
     }
 
-    JSONObject brushAsset(int shape) {
-        String fileName = "shapes/qube" + String.valueOf(shape) + ".json";
+    JSONObject jsonShape(int shape) {
+        String fileName;
+        switch (shape) {
+            case 271:
+                fileName = "shapes/arch_64.json";
+                break;
+            case 270:
+                fileName = "shapes/arch_85.json";
+                break;
+            case 269:
+                fileName = "shapes/arch_128.json";
+                break;
+            case 259:
+                fileName = "shapes/cone.json";
+                break;
+            case 260:
+                fileName = "shapes/cone_quarter.json";
+                break;
+            case 262:
+                fileName = "shapes/cylinder.json";
+                break;
+            case 263:
+                fileName = "shapes/cylinder_quarter.json";
+                break;
+            case 264:
+                fileName = "shapes/cylinder_quarter_inverse.json";
+                break;
+            default:
+                fileName = "shapes/qube" + String.valueOf(shape) + ".json";
+        }
+
         try {
             InputStream stream = context.getAssets().open(fileName);
             String jsonString = FileUtils.convertStreamToString(stream);
