@@ -50,8 +50,8 @@ public class JsonParser {
             Entity player = new Entity("info_player_start");
             player.kvs.put("spawnflags", "0");
             JSONObject cam = json.getJSONObject("camera");
-            float x = (float)cam.getDouble("focus_x");
-            float y = -(float)cam.getDouble("focus_z");
+            float x = (float)cam.getDouble("focus_z");
+            float y = (float)cam.getDouble("focus_x");
             float z = (float)cam.getDouble("focus_y");
             player.kvs.put("origin", String.format("%f %f %f", x, y, z));
 
@@ -75,15 +75,19 @@ public class JsonParser {
     }
 
     private ArrayList<Brush> parseQube(JSONObject qube) throws JSONException {
-        // Qubism uses Y as the up axis, while HL uses Z
-        // Because of this, we need to swap them and invert Y
-        float ax = (float)qube.getDouble("pos_x");
-        float ay = -(float)qube.getDouble("pos_z");
+        // Qubism uses Y as the up axis, while HL uses Z.
+        // Because of this, when converting co-ordinates from
+        // Qubism's system to HL's, we reinterpret the axes as follows:
+        // X -> Y
+        // Y -> Z
+        // Z -> X
+        float ax = (float)qube.getDouble("pos_z");
+        float ay = (float)qube.getDouble("pos_x");
         float az = (float)qube.getDouble("pos_y");
         Vector pos = new Vector(ax, ay, az);
 
-        float bx = (float)qube.getDouble("size_x");
-        float by = -(float)qube.getDouble("size_z");
+        float bx = (float)qube.getDouble("size_z");
+        float by = (float)qube.getDouble("size_x");
         float bz = (float)qube.getDouble("size_y");
         Vector size = new Vector(bx, by, bz);
 
@@ -132,33 +136,16 @@ public class JsonParser {
 
                 for (int k = 0; k < 3; ++k) {
                     JSONArray jv = jpoints.getJSONArray(k);
-                    // As above, swap Y and Z and invert Y
-                    float tx =  (float)jv.getDouble(0);
-                    float ty = -(float)jv.getDouble(2);
-                    float tz =  (float)jv.getDouble(1);
-                    if (shape > 255) {
-                        tx /= 256.0f;
-                        ty /= 256.0f;
-                        tz /= 256.0f;
-                    }
+                    // As above, juggle the axes like some horror movie clown
+                    // Actually wait don't, I fixed it
+                    float tx = (float)jv.getDouble(0);
+                    float ty = (float)jv.getDouble(1);
+                    float tz = (float)jv.getDouble(2);
                     float x = ax + tx * bx;
                     float y = ay + ty * by;
                     float z = az + tz * bz;
                     points[k] = new Vector(x, y, z);
                 }
-
-                // TODO: this shouldn't be done in code, I should edit the assets instead
-                /*Vector a = points[0].minus(points[1]);
-                Vector b = points[2].minus(points[1]);
-                Vector normal = a.cross(b);
-                Vector centre = pos.plus(size.times(0.5f));
-                Vector outwards = points[1].minus(centre);
-                if (outwards.dot(normal) < 0f) {
-                    Vector temp = new Vector(points[0]);
-                    points[0] = points[1];
-                    points[1] = points[2];
-                    points[2] = temp;
-                }*/
 
                 faces.add(new Face(points, texName, defU, defV, 0f, 1f, 1f));
             }
