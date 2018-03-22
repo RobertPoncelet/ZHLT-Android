@@ -128,12 +128,16 @@ public class MainActivity extends Activity {
                         File localBsp = new File(localBspPath);
                         Log.d(TAG, String.format("Local BSP: %s", localBspPath));
 
-                        String bspPath = getExternalFilesDir(null).getPath() + File.separator + mapName + ".bsp";
-                        Log.d(TAG, String.format("BSP: %s", bspPath));
+                        //String bspPath = getExternalFilesDir(null).getPath() + File.separator + mapName + ".bsp";
+                        File bsp = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), mapName + ".bsp");
+                        Log.d(TAG, String.format("BSP: %s", bsp.getPath()));
                         FileInputStream localBspStream = new FileInputStream(localBsp);
-                        File fudge = FileUtils.createFileFromInputStream(localBspStream, bspPath);
+                        File fudge = null; //FileUtils.createFileFromInputStream(localBspStream, bspPath);
+                        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                            fudge = FileUtils.createFileFromInputStream(localBspStream, bsp);
+                        }
                         if (fudge == null) {
-                            Log.d(TAG, String.format("Default BSP copy failed: %s", bspPath));
+                            Log.d(TAG, String.format("Default BSP copy failed: %s", bsp.getPath()));
                         }
 
                         String xashBspPath = mapsDir + File.separator + mapName + ".bsp";

@@ -79,7 +79,7 @@ public class FileUtils {
     public static File createFileFromInputStream(InputStream inputStream, String fileName) {
         try {
             File f = new File(fileName);
-            if (f.setWritable(true, true)) {
+            //if (f.setWritable(true, true)) {
                 OutputStream outputStream = new FileOutputStream(f);
                 byte buffer[] = new byte[1024];
                 int length;
@@ -92,9 +92,30 @@ public class FileUtils {
                 inputStream.close();
 
                 return f;
-            } else {
-                Log.d(TAG, String.format("Error! No writable permissions for %s", fileName));
+            //} else {
+            //    Log.d(TAG, String.format("Error! No writable permissions for %s", fileName));
+            //}
+        } catch (IOException e) {
+            Log.d(TAG, e.toString());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static File createFileFromInputStream(InputStream inputStream, File outputFile) {
+        try {
+            OutputStream outputStream = new FileOutputStream(outputFile);
+            byte buffer[] = new byte[1024];
+            int length;
+
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
             }
+
+            outputStream.close();
+            inputStream.close();
+
+            return outputFile;
         } catch (IOException e) {
             Log.d(TAG, e.toString());
             e.printStackTrace();
