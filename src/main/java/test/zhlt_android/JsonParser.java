@@ -35,7 +35,7 @@ public class JsonParser {
             MapFile map = new MapFile();
             Entity world = new Entity("worldspawn");
             world.kvs.put("spawnflags", "0");
-            world.kvs.put("wad", "/storage/9C33-6BBD/Android/data/test.zhlt_android/files/halflife.wad");
+            world.kvs.put("wad", "/storage/emulated/0/Android/data/test.zhlt_android/files/Q.wad");
 
             JSONArray qubes = json.getJSONArray("qubes");
             for (int i = 0; i < qubes.length(); ++i) {
@@ -56,6 +56,15 @@ public class JsonParser {
             player.kvs.put("origin", String.format("%f %f %f", x, y, z));
 
             map.ents.add(player);
+
+            Entity light = new Entity("light_environment");
+            light.kvs.put("_light", "255 255 128 200");
+            light.kvs.put("pitch", "0");
+            light.kvs.put("_falloff", "0");
+            light.kvs.put("_fade", "1.0");
+            light.kvs.put("angles", "0 0 0");
+
+            map.ents.add(light);
 
             PrintStream p = new PrintStream(new FileOutputStream(outFile));
             Log.d(TAG, "Starting map write");

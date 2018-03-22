@@ -103,12 +103,12 @@ public class MainActivity extends Activity {
                     if (code == 0) {
                         code = hlbspMain(localMapPath);
                     }
-                    /*if (code == 0) {
+                    if (code == 0) {
                         code = hlvisMain(localMapPath);
                     }
                     if (code == 0) {
                         hlradMain(localMapPath);
-                    }*/
+                    }
 
                     // Log
                     TextView log = (TextView)findViewById(R.id.log);
@@ -233,7 +233,7 @@ public class MainActivity extends Activity {
 
         try {
             InputStream inStream = getContentResolver().openInputStream(uri);
-            FileUtils.createFileFromInputStream(inStream, filePath);
+            FileUtils.copyToFilesDir(getApplicationContext(), inStream, fileName + ".map");
             localMapPath = filePath;
         } catch (IOException e) {
             mapPathView.setText(e.toString());

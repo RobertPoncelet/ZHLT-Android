@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -99,5 +100,20 @@ public class FileUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static FileDescriptor copyToFilesDir(Context context, InputStream inputStream, String fileName) throws IOException {
+        FileOutputStream outputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+
+        byte buffer[] = new byte[1024];
+        int length;
+
+        while ((length = inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, length);
+        }
+
+        outputStream.close();
+        inputStream.close();
+        return outputStream.getFD();
     }
 }
