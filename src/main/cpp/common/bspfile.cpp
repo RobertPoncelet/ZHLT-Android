@@ -527,6 +527,26 @@ void            LoadBSPImage(dheader_t* const header)
     g_dvisdata_checksum = FastChecksum(g_dvisdata, g_visdatasize * sizeof(g_dvisdata[0]));
     g_dlightdata_checksum = FastChecksum(g_dlightdata, g_lightdatasize * sizeof(g_dlightdata[0]));
     g_dentdata_checksum = FastChecksum(g_dentdata, g_entdatasize * sizeof(g_dentdata[0]));
+
+#define LOGREADLUMP(type, plural) Log("Reading %i " #plural " in %i bytes\n", g_num##plural, g_num##plural * sizeof(type))
+#define LOGREADDATALUMP(type) Log("Reading %i bytes of " #type " data\n", g_##type##datasize)
+
+    LOGREADLUMP(dplane_t, planes);
+    LOGREADLUMP(dleaf_t, leafs);
+    LOGREADLUMP(dvertex_t, vertexes);
+    LOGREADLUMP(dnode_t, nodes);
+    LOGREADLUMP(texinfo_t, texinfo);
+    LOGREADLUMP(dface_t, faces);
+    LOGREADLUMP(dclipnode_t, clipnodes);
+    LOGREADLUMP(g_dmarksurfaces[0], marksurfaces);
+    LOGREADLUMP(g_dsurfedges[0], surfedges);
+    LOGREADLUMP(dedge_t, edges);
+    LOGREADLUMP(dmodel_t, models);
+
+    LOGREADDATALUMP(light);
+    LOGREADDATALUMP(vis);
+    LOGREADDATALUMP(ent);
+    LOGREADDATALUMP(tex);
 }
 
 //
@@ -583,6 +603,38 @@ void            WriteBSPFile(const char* const filename)
     AddLump(LUMP_VISIBILITY,g_dvisdata,     g_visdatasize,                      header, bspfile);
     AddLump(LUMP_ENTITIES,  g_dentdata,     g_entdatasize,                      header, bspfile);
     AddLump(LUMP_TEXTURES,  g_dtexdata,     g_texdatasize,                      header, bspfile);
+
+#define LOGWRITELUMP(type, plural) Log("Writing %i " #plural " in %i bytes\n", g_num##plural, g_num##plural * sizeof(type))
+#define LOGWRITEDATALUMP(type) Log("Writing %i bytes of " #type " data\n", g_##type##datasize)
+
+    LOGWRITELUMP(dplane_t, planes);
+    LOGWRITELUMP(dleaf_t, leafs);
+    LOGWRITELUMP(dvertex_t, vertexes);
+    LOGWRITELUMP(dnode_t, nodes);
+    LOGWRITELUMP(texinfo_t, texinfo);
+    LOGWRITELUMP(dface_t, faces);
+    LOGWRITELUMP(dclipnode_t, clipnodes);
+    LOGWRITELUMP(g_dmarksurfaces[0], marksurfaces);
+    LOGWRITELUMP(g_dsurfedges[0], surfedges);
+    LOGWRITELUMP(dedge_t, edges);
+    LOGWRITELUMP(dmodel_t, models);
+
+    LOGWRITEDATALUMP(light);
+    LOGWRITEDATALUMP(vis);
+    LOGWRITEDATALUMP(ent);
+    LOGWRITEDATALUMP(tex);
+
+    /*Log("Writing %i bytes of light data", g_lightdatasize);
+    Log("Writing %i bytes of vis data", g_visdatasize);
+    Log("Writing %i bytes of light data", g_lightdatasize);*/
+
+    /*Log("Writing %i planes in %i bytes", g_numplanes, g_numplanes * sizeof(dplane_t));
+    Log("Writing %i leaves in %i bytes", g_numleafs, g_numleafs * sizeof(dleaf_t));
+    Log("Writing %i vertices in %i bytes", g_numvertexes, g_numvertexes * sizeof(dvertex_t));
+    Log("Writing %i nodes in %i bytes", g_numnodes, g_numnodes * sizeof(dnode_t));
+    Log("Writing %i texinfos in %i bytes", g_numtexinfo, g_numtexinfo * sizeof(texinfo_t));
+    Log("Writing %i faces in %i bytes", g_numfaces, g_numfaces * sizeof(dface_t));
+    Log("Writing %i faces in %i bytes", g_numclipnodes, g_numclipnodes * sizeof(dclipnode_t));*/
 
     fseek(bspfile, 0, SEEK_SET);
     SafeWrite(bspfile, header, sizeof(dheader_t));
